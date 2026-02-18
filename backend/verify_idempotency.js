@@ -2,7 +2,7 @@
 const axios = require('axios');
 const { v4: uuidv4 } = require('uuid');
 
-const API_URL = 'https://expense-tracker-pi-swart-90.vercel.app/';
+const API_URL = 'https://expense-tracker-450t.onrender.com/expenses';
 
 async function testIdempotency() {
     const idempotencyKey = uuidv4();

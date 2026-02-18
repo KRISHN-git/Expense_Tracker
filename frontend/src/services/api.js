@@ -1,7 +1,7 @@
 
 import axios from 'axios';
 
-const API_URL = 'https://expense-tracker-pi-swart-90.vercel.app/expenses';
+const API_URL = 'https://expense-tracker-450t.onrender.com/expenses';
 
 const api = axios.create({
     baseURL: API_URL,
