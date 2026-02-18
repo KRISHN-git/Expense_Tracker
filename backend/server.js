@@ -11,7 +11,17 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 
 // Middleware
-app.use(cors());
+// Middleware
+app.use(cors({
+    origin: [
+        'http://localhost:5173',
+        'https://expense-tracker-q6my.vercel.app',
+        'https://expense-tracker-q6my.vercel.app/',
+        'https://expense-tracker-pi-swart-90.vercel.app' // Backend self-origin just in case
+    ],
+    methods: ['GET', 'POST'],
+    credentials: true
+}));
 app.use(express.json());
 
 // Database Connection
