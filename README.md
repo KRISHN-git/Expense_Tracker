@@ -56,7 +56,11 @@ This project was built within a limited timebox to demonstrate a production-qual
 2.  **No Authentication**: Authenticated was omitted to focus on core CRUD features and polish within the timeframe.
 3.  **Client-Side Calculations**: Totals and summaries are calculated on the client to reduce backend load for this scale of data, though server-side aggregation would be better for massive datasets.
 
-### Trade-offs & Future Improvements
-1.  **State Management**: Used local React state. For a larger app, Redux or React Query would handle caching and global state better.
-2.  **Testing Coverage**: Focused on critical path unit tests and manual verification. E2E testing (Playwright/Cypress) was omitted due to time constraints.
-3.  **Styling**: Used Tailwind utility classes directly. A component library or design tokens system would be better for long-term scalability.
+### Intentional Omissions & Trade-offs due to Timebound
+Due to the limited timeframe, the following features were intentionally omitted to focus on core functionality and UI polish:
+
+1.  **Authentication**: Skipped user accounts to focus on a high-quality single-user experience.
+2.  **Backend Validation**: Relied partially on frontend validation; production apps need stricter Zod/Joi schemas on the server.
+3.  **E2E Testing**: Cypress/Playwright tests were omitted in favor of unit tests (Vitest) and manual verification.
+4.  **State Management**: Used local React state instead of Redux/Context for simplicity, which is sufficient for this scope but not scalable.
+5.  **Date Range Picker**: Implemented a single-date filter for simplicity rather than a full range picker.
