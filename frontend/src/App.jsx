@@ -10,13 +10,17 @@ function App() {
   const [error, setError] = useState(null);
   const [categoryFilter, setCategoryFilter] = useState('');
   const [sortOrder, setSortOrder] = useState('date_desc');
+  const [dateFilter, setDateFilter] = useState('');
 
   const fetchExpenses = async () => {
     setLoading(true);
     try {
       const params = {};
       if (categoryFilter) params.category = categoryFilter;
-      if (sortOrder === 'date_desc') params.sort = 'date_desc';
+      if (dateFilter) params.date = dateFilter;
+
+      // Handle sort
+      params.sort = sortOrder;
 
       const data = await getExpenses(params);
       setExpenses(data);
@@ -31,26 +35,32 @@ function App() {
 
   useEffect(() => {
     fetchExpenses();
-  }, [categoryFilter, sortOrder]);
+  }, [categoryFilter, sortOrder, dateFilter]);
 
   const handleExpenseAdded = (newExpense) => {
     setExpenses(prev => [newExpense, ...prev]);
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-7xl mx-auto">
-        <header className="mb-10 text-center">
-          <h1 className="text-4xl font-extrabold text-gray-900 tracking-tight">Expense Tracker</h1>
-          <p className="mt-2 text-lg text-gray-600">Simple, robust, and effective personal finance.</p>
-        </header>
+    <div className="h-screen flex flex-col bg-gray-50 overflow-hidden font-sans text-gray-900">
+      <header className="bg-white border-b border-gray-200 px-6 py-3 flex justify-between items-center shadow-sm z-10 shrink-0">
+        <div className="flex items-center gap-2">
+          <h1 className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 to-purple-600">
+            Expense Tracker
+          </h1>
+        </div>
+        <div className="text-sm text-gray-500 font-medium">Dashboard</div>
+      </header>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
-          <div className="lg:col-span-1">
+      <div className="flex-1 flex overflow-hidden">
+        <div className="flex-1 max-w-7xl mx-auto w-full p-4 grid grid-cols-1 lg:grid-cols-12 gap-6 h-full">
+          {/* Left Sidebar: Form */}
+          <div className="lg:col-span-4 h-full overflow-y-auto pr-1">
             <ExpenseForm onExpenseAdded={handleExpenseAdded} />
           </div>
 
-          <div className="lg:col-span-2 h-full">
+          {/* Right Content: List & Summary */}
+          <div className="lg:col-span-8 h-full flex flex-col overflow-hidden">
             <ExpenseList
               expenses={expenses}
               loading={loading}
@@ -59,6 +69,8 @@ function App() {
               setCategoryFilter={setCategoryFilter}
               sortOrder={sortOrder}
               setSortOrder={setSortOrder}
+              dateFilter={dateFilter}
+              setDateFilter={setDateFilter}
             />
           </div>
         </div>

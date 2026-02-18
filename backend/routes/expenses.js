@@ -66,11 +66,33 @@ router.post('/', async (req, res) => {
 // @desc    Get all expenses
 // @access  Public
 router.get('/', async (req, res) => {
-    const { category, sort } = req.query;
+    const { category, sort, date } = req.query;
 
     let query = {};
     if (category) {
         query.category = category;
+    }
+
+    if (date) {
+        // Filter by specific date (ignoring time)
+        // Expenses are stored with T00:00:00.000Z usually if just date is sent from frontend
+        // But to be safe, we can match the exact string if meaningful, or range.
+        // Given our frontend sends YYYY-MM-DD, and backend saves it directly or as ISO.
+        // Let's assume exact match on the string prefix or a date range for that day.
+
+        // Simpler approach for now: Match the exact ISO string stored if it's just date.
+        // Better approach: query for the range of that day.
+
+        const startDate = new Date(date);
+        startDate.setUTCHours(0, 0, 0, 0);
+
+        const endDate = new Date(date);
+        endDate.setUTCHours(23, 59, 59, 999);
+
+        query.date = {
+            $gte: startDate.toISOString(),
+            $lte: endDate.toISOString()
+        };
     }
 
     let sortOption = { createdAt: -1 }; // Default: Newest created first

@@ -45,3 +45,18 @@ A robust, production-quality Expense Tracker application built with the MERN sta
 
 - **Backend**: Ready for Render/Railway.
 - **Frontend**: Ready for Vercel/Netlify.
+
+## Design Decisions & Trade-offs
+
+### Context
+This project was built within a limited timebox to demonstrate a production-quality, full-stack application.
+
+### Key Decisions
+1.  **Compact UI**: Prioritized a single-screen dashboard over multi-page navigation to reduce friction and improve data density.
+2.  **No Authentication**: Authenticated was omitted to focus on core CRUD features and polish within the timeframe.
+3.  **Client-Side Calculations**: Totals and summaries are calculated on the client to reduce backend load for this scale of data, though server-side aggregation would be better for massive datasets.
+
+### Trade-offs & Future Improvements
+1.  **State Management**: Used local React state. For a larger app, Redux or React Query would handle caching and global state better.
+2.  **Testing Coverage**: Focused on critical path unit tests and manual verification. E2E testing (Playwright/Cypress) was omitted due to time constraints.
+3.  **Styling**: Used Tailwind utility classes directly. A component library or design tokens system would be better for long-term scalability.
