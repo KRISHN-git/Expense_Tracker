@@ -149,7 +149,7 @@ const ExpenseForm = ({ onExpenseAdded }) => {
                         type="submit"
                         disabled={loading}
                         className={cn(
-                            "w-full flex justify-center items-center py-4 px-6 border border-transparent rounded-xl shadow-md text-lg font-bold text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all transform hover:scale-[1.01] active:scale-[0.98] mt-4",
+                            "w-full flex justify-center items-center py-4 px-6 border border-transparent rounded-xl shadow-md text-lg font-bold text-white bg-blue-500 hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all transform hover:scale-[1.01] active:scale-[0.98] mt-4",
                             loading && "opacity-75 cursor-not-allowed transform-none"
                         )}
                     >
