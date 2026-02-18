@@ -8,7 +8,7 @@ const api = axios.create({
 });
 
 export const getExpenses = async (params) => {
-    const response = await api.get('/', { params });
+    const response = await api.get('', { params });
     return response.data;
 };
 
@@ -18,7 +18,7 @@ export const createExpense = async (expenseData, idempotencyKey) => {
             'Idempotency-Key': idempotencyKey,
         },
     };
-    const response = await api.post('/', expenseData, config);
+    const response = await api.post('', expenseData, config);
     return response.data;
 };
 
