@@ -76,6 +76,8 @@ router.get('/', async (req, res) => {
     let sortOption = { createdAt: -1 }; // Default: Newest created first
     if (sort === 'date_desc') {
         sortOption = { date: -1 };
+    } else if (sort === 'date_asc') {
+        sortOption = { date: 1 };
     }
 
     try {

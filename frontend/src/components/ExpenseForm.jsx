@@ -141,7 +141,7 @@ const ExpenseForm = ({ onExpenseAdded }) => {
                             onChange={(e) => setDescription(e.target.value)}
                             required
                             placeholder="What was this for?"
-                            className="block w-full rounded-md border-gray-300 py-2 focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm border"
+                            className="block w-full rounded-md border-gray-300 py-2 px-4 focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm border"
                         />
                     </div>
 
