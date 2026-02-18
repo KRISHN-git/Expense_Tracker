@@ -17,7 +17,7 @@ app.use(cors({
         'http://localhost:5173',
         'https://expense-tracker-q6my.vercel.app',
         'https://expense-tracker-q6my.vercel.app/',
-        'https://expense-tracker-450t.onrender.com' // Backend self-origin just in case
+        'https://expense-tracker-pi-swart-90.vercel.app' // Backend self-origin just in case
     ],
     methods: ['GET', 'POST'],
     credentials: true
