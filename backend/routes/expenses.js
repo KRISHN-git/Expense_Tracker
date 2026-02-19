@@ -3,7 +3,98 @@ const express = require('express');
 const router = express.Router();
 const Expense = require('../models/Expense');
 const Plan = require('../models/Plan');
+const MonthlyBudget = require('../models/MonthlyBudget');
 const { protect } = require('../middleware/authMiddleware');
+
+// ... existing imports ...
+
+// @desc    Get budget analytics (Last 6 Months)
+// @route   GET /expenses/budget-analytics
+// @access  Private
+router.get('/budget-analytics', protect, async (req, res) => {
+    try {
+        const userId = req.user.id;
+        const now = new Date();
+        const sixMonthsAgo = new Date();
+        sixMonthsAgo.setMonth(now.getMonth() - 5);
+        sixMonthsAgo.setDate(1); // Start of the 6th month back (e.g., if now is Oct 2024, start from May 1)
+        sixMonthsAgo.setHours(0, 0, 0, 0);
+
+        // 1. Aggregate Expenses by Month/Year
+        const expenses = await Expense.aggregate([
+            {
+                $match: {
+                    user: new mongoose.Types.ObjectId(userId),
+                    date: { $gte: sixMonthsAgo }
+                }
+            },
+            {
+                $group: {
+                    _id: {
+                        month: { $month: "$date" },
+                        year: { $year: "$date" }
+                    },
+                    totalSpent: { $sum: "$amount" }
+                }
+            }
+        ]);
+
+        // 2. Fetch Monthly Budgets
+        // Also get the user's *current* budget as a fallback (if no history exists for a month)
+        // Or strict history? Let's use history if available, else user.monthlyBudget (or 0)
+        // Actually, user.monthlyBudget applies to *future* or *current* until changed. 
+        // For history, if no record exists, it means we didn't track it. Maybe assume current budget?
+        // Let's assume current budget for now if history is missing.
+        const budgetHistory = await MonthlyBudget.find({
+            user: userId,
+            $or: [
+                { year: { $gt: sixMonthsAgo.getFullYear() } },
+                {
+                    year: sixMonthsAgo.getFullYear(),
+                    month: { $gte: sixMonthsAgo.getMonth() + 1 }
+                }
+            ]
+        });
+
+        // 3. Construct 6-Month Data Array
+        const result = [];
+        const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
+        // Loop from 5 months ago to current month
+        for (let i = 5; i >= 0; i--) {
+            const d = new Date();
+            d.setMonth(now.getMonth() - i);
+            const m = d.getMonth() + 1;
+            const y = d.getFullYear();
+
+            // Find expense for this month
+            const expenseRecord = expenses.find(e => e._id.month === m && e._id.year === y);
+            const spent = expenseRecord ? expenseRecord.totalSpent : 0;
+
+            // Find budget for this month
+            const budgetRecord = budgetHistory.find(b => b.month === m && b.year === y);
+            // Default to current user budget if no history record (best guess)
+            // But we need to fetch user separately? req.user is attached by protect middleware? 
+            // Wait, protect middleware attaches req.user, but it might be just the User document or ID depending on implementation.
+            // Let's check authMiddleware. Ah, it does `req.user = await User.findById(decoded.id)`. So we have the full user doc!
+            const budget = budgetRecord ? budgetRecord.amount : (req.user.monthlyBudget || 0);
+
+            result.push({
+                month: monthNames[m - 1],
+                year: y,
+                budget,
+                spent,
+                status: spent > budget ? 'Over Budget' : 'Within Budget'
+            });
+        }
+
+        res.json(result);
+
+    } catch (error) {
+        console.error("Analytics Error:", error);
+        res.status(500).json({ message: 'Server Error' });
+    }
+});
 
 // @desc    Create an expense
 // @route   POST /expenses

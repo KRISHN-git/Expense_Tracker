@@ -7,6 +7,7 @@ import { API_BASE_URL } from '../utils/constants';
 import { Plus, ArrowRight, Loader2, Calendar, ArrowLeft, User, Users, X, Trash2 } from 'lucide-react';
 import ConfirmModal from '../components/ConfirmModal'; // Import Modal
 
+
 const Plans = () => {
     const [plans, setPlans] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -28,6 +29,7 @@ const Plans = () => {
     const [memberInput, setMemberInput] = useState('');
 
     const { user } = useAuth();
+
 
     useEffect(() => {
         fetchPlans();
@@ -52,6 +54,7 @@ const Plans = () => {
 
     const handleCreatePlan = async (e) => {
         e.preventDefault();
+
         try {
             const token = localStorage.getItem('token');
             const config = {
@@ -76,6 +79,8 @@ const Plans = () => {
         } catch (error) {
             console.error('Failed to create plan', error);
             addToast('Failed to create plan.', 'error');
+        } finally {
+
         }
     };
 
@@ -90,6 +95,7 @@ const Plans = () => {
     const confirmDelete = async () => {
         if (!deleteModal.planId) return;
 
+
         try {
             const token = localStorage.getItem('token');
             await axios.delete(`${API_BASE_URL}/plans/${deleteModal.planId}`, {
@@ -103,6 +109,7 @@ const Plans = () => {
             addToast('Failed to delete plan. Please try again.', 'error');
         } finally {
             setDeleteModal({ show: false, planId: null, planName: '' });
+
         }
     };
 

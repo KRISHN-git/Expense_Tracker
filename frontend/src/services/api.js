@@ -28,6 +28,11 @@ export const getExpenses = async (params) => {
     return response.data;
 };
 
+export const getBudgetAnalytics = async () => {
+    const response = await api.get('/budget-analytics');
+    return response.data;
+};
+
 export const createExpense = async (expenseData, idempotencyKey) => {
     const config = {
         headers: {
@@ -40,6 +45,37 @@ export const createExpense = async (expenseData, idempotencyKey) => {
 
 export const deleteExpense = async (id) => {
     const response = await api.delete(`/${id}`);
+    return response.data;
+};
+
+// Generic API Client for other routes (since 'api' base is /expenses)
+const client = axios.create({
+    baseURL: API_BASE_URL,
+});
+
+client.interceptors.request.use((config) => {
+    const token = localStorage.getItem('token');
+    if (token) config.headers.Authorization = `Bearer ${token}`;
+    return config;
+});
+
+export const updateProfile = async (userData) => {
+    const response = await client.put('/auth/profile', userData);
+    return response.data;
+};
+
+export const updatePlan = async (id, planData) => {
+    const response = await client.put(`/plans/${id}`, planData);
+    return response.data;
+};
+
+export const removePlanMember = async (id, memberName) => {
+    const response = await client.put(`/plans/${id}/members/remove`, { memberName });
+    return response.data;
+};
+
+export const addPlanMember = async (id, memberName) => {
+    const response = await client.put(`/plans/${id}/members/add`, { memberName });
     return response.data;
 };
 

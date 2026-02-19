@@ -1,6 +1,6 @@
-
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { AnimatePresence } from 'framer-motion';
 import LandingPage from './pages/LandingPage';
 import LoginPage from './pages/LoginPage';
 import SignupPage from './pages/SignupPage';
@@ -9,6 +9,8 @@ import ProtectedRoute from './components/ProtectedRoute';
 import { useAuth } from './context/AuthContext';
 import Plans from './pages/Plans';
 import PlanDetail from './pages/PlanDetail';
+import PageTransition from './components/PageTransition';
+import AuthLayout from './components/AuthLayout';
 
 // Helper to redirect authenticated users away from public pages
 const PublicRoute = ({ children }) => {
@@ -17,27 +19,42 @@ const PublicRoute = ({ children }) => {
   return user ? <Navigate to="/dashboard" /> : children;
 };
 
-function App() {
+const AnimatedRoutes = () => {
+  const location = useLocation();
+
+  // Determine key for AnimatePresence
+  // If we are on login or signup, use the same key so they don't animate between each other
+  const locationKey = location.pathname === '/login' || location.pathname === '/signup'
+    ? 'auth-page'
+    : location.pathname;
+
   return (
-    <Router>
-      <Routes>
+    <AnimatePresence mode="wait">
+      <Routes location={location} key={locationKey}>
         <Route path="/" element={
           <PublicRoute>
-            <LandingPage />
-          </PublicRoute>
-        } />
-        <Route path="/login" element={
-          <PublicRoute>
-            <LoginPage />
-          </PublicRoute>
-        } />
-        <Route path="/signup" element={
-          <PublicRoute>
-            <SignupPage />
+            <PageTransition>
+              <LandingPage />
+            </PageTransition>
           </PublicRoute>
         } />
 
+        {/* Auth Pages - Wrapped in AuthLayout (Persists layout across login/signup toggle) */}
+        <Route element={<AuthLayout />}>
+          <Route path="/login" element={
+            <PublicRoute>
+              <LoginPage />
+            </PublicRoute>
+          } />
+          <Route path="/signup" element={
+            <PublicRoute>
+              <SignupPage />
+            </PublicRoute>
+          } />
+        </Route>
+
         <Route element={<ProtectedRoute />}>
+          {/* Removed PageTransition from Dashboard and other protected routes as requested */}
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/plans" element={<Plans />} />
           <Route path="/plans/:id" element={<PlanDetail />} />
@@ -45,8 +62,16 @@ function App() {
 
         <Route path="*" element={<Navigate to="/" />} />
       </Routes>
+    </AnimatePresence>
+  );
+};
+
+function App() {
+  return (
+    <Router>
+      <AnimatedRoutes />
     </Router>
   )
 }
 
-export default App
+export default App;

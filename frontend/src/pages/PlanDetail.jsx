@@ -9,6 +9,8 @@ import { cn } from '../utils/cn';
 import { API_BASE_URL } from '../utils/constants';
 import { useToast } from '../context/ToastContext'; // Import
 import ConfirmModal from '../components/ConfirmModal'; // Import
+import { updatePlan, removePlanMember, addPlanMember } from '../services/api'; // Import new API functions
+
 
 /*
   Improved PlanDetail Layout:
@@ -30,6 +32,78 @@ const PlanDetail = () => {
     // Modal States
     const [deletePlanModal, setDeletePlanModal] = useState(false);
     const [deleteExpenseModal, setDeleteExpenseModal] = useState({ show: false, expenseId: null });
+
+    // New States for Edit/Remove
+    const [isEditingPlan, setIsEditingPlan] = useState(false);
+    const [editPlanData, setEditPlanData] = useState({ title: '', description: '', totalBudget: 0 });
+    const [removeMemberModal, setRemoveMemberModal] = useState({ show: false, memberName: null });
+
+    // Add Member State
+    const [newMemberName, setNewMemberName] = useState('');
+
+    // Handler to open edit modal
+    const openEditModal = () => {
+        if (!plan) return;
+        setEditPlanData({
+            title: plan.title,
+            description: plan.description || '',
+            totalBudget: plan.totalBudget || 0
+        });
+        setNewMemberName(''); // Reset new member input
+        setIsEditingPlan(true);
+    };
+
+    // Handler to submit plan updates
+    const handleUpdatePlan = async () => {
+
+        try {
+            const updated = await updatePlan(id, editPlanData);
+            setPlan(prev => ({ ...prev, ...updated }));
+            setIsEditingPlan(false);
+            addToast('Plan updated successfully', 'success');
+        } catch (error) {
+            console.error("Failed to update plan", error);
+            addToast('Failed to update plan', 'error');
+        } finally {
+
+        }
+    };
+
+    // Handler to add new member
+    const handleAddMember = async () => {
+        if (!newMemberName.trim()) return;
+
+        try {
+            const updated = await addPlanMember(id, newMemberName);
+            setPlan(prev => ({ ...prev, members: updated.members, type: updated.type }));
+            setNewMemberName('');
+            addToast(`${newMemberName} added to plan`, 'success');
+        } catch (error) {
+            console.error("Failed to add member", error);
+            const status = error.response?.status;
+            const message = error.response?.data?.message || error.message;
+            addToast(`Failed: ${message} (${status})`, 'error');
+        } finally {
+
+        }
+    };
+
+    // Handler to remove member
+    const confirmRemoveMember = async () => {
+        if (!removeMemberModal.memberName) return;
+
+        try {
+            const updated = await removePlanMember(id, removeMemberModal.memberName);
+            setPlan(prev => ({ ...prev, members: updated.members }));
+            addToast(`${removeMemberModal.memberName} removed`, 'success');
+        } catch (error) {
+            console.error("Failed to remove member", error);
+            addToast('Failed to remove member', 'error');
+        } finally {
+            setRemoveMemberModal({ show: false, memberName: null });
+
+        }
+    };
 
     // Filters for ExpenseList
     const [categoryFilter, setCategoryFilter] = useState('');
@@ -64,6 +138,7 @@ const PlanDetail = () => {
     };
 
     const confirmDeletePlan = async () => {
+
         try {
             const token = localStorage.getItem('token');
             await axios.delete(`${API_BASE_URL}/plans/${id}`, {
@@ -76,11 +151,13 @@ const PlanDetail = () => {
             addToast('Failed to delete plan.', 'error');
         } finally {
             setDeletePlanModal(false);
+
         }
     };
 
     const confirmDeleteExpense = async () => {
         if (!deleteExpenseModal.expenseId) return;
+
         try {
             const token = localStorage.getItem('token');
             await axios.delete(`${API_BASE_URL}/expenses/${deleteExpenseModal.expenseId}`, {
@@ -93,6 +170,7 @@ const PlanDetail = () => {
             addToast('Failed to delete expense.', 'error');
         } finally {
             setDeleteExpenseModal({ show: false, expenseId: null });
+
         }
     };
 
@@ -196,13 +274,21 @@ const PlanDetail = () => {
                         <ArrowLeft className="w-4 h-4 mr-1" />
                         Back to Plans
                     </Link>
-                    <button
-                        onClick={() => setDeletePlanModal(true)}
-                        className="text-slate-400 hover:text-red-600 transition-colors p-2 rounded-lg hover:bg-red-50"
-                        title="Delete Plan"
-                    >
-                        <Trash2 className="w-5 h-5" />
-                    </button>
+                    <div className="flex gap-2">
+                        <button
+                            onClick={openEditModal}
+                            className="text-slate-500 hover:text-blue-600 transition-colors p-2 rounded-lg hover:bg-blue-50 font-bold text-sm bg-slate-100 flex items-center gap-2"
+                        >
+                            Edit
+                        </button>
+                        <button
+                            onClick={() => setDeletePlanModal(true)}
+                            className="text-slate-400 hover:text-red-600 transition-colors p-2 rounded-lg hover:bg-red-50"
+                            title="Delete Plan"
+                        >
+                            <Trash2 className="w-5 h-5" />
+                        </button>
+                    </div>
                 </div>
             </div>
 
@@ -368,7 +454,17 @@ const PlanDetail = () => {
                                                             ></div>
                                                         </div>
                                                         {!isSelected && (
-                                                            <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                            <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity flex gap-1">
+                                                                <button
+                                                                    onClick={(e) => {
+                                                                        e.stopPropagation();
+                                                                        setRemoveMemberModal({ show: true, memberName: stat.name });
+                                                                    }}
+                                                                    className="p-1 hover:bg-red-100 rounded text-red-400 hover:text-red-500"
+                                                                    title="Remove Member"
+                                                                >
+                                                                    <Trash2 className="w-3 h-3" />
+                                                                </button>
                                                                 <Users className="w-4 h-4 text-blue-400" />
                                                             </div>
                                                         )}
@@ -426,6 +522,94 @@ const PlanDetail = () => {
                 title="Delete Expense?"
                 message="Are you sure you want to delete this transaction?"
                 confirmText="Delete Transaction"
+            />
+
+            {/* Edit Plan Modal */}
+            {isEditingPlan && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fade-in">
+                    <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden animate-scale-up">
+                        <div className="p-6 border-b border-slate-100 flex justify-between items-center">
+                            <h3 className="text-xl font-bold text-slate-800">Edit Plan Details</h3>
+                            <button onClick={() => setIsEditingPlan(false)} className="text-slate-400 hover:text-slate-600">
+                                <Trash2 className="w-5 h-5 rotate-45" />
+                            </button>
+                        </div>
+                        <div className="p-6 space-y-4">
+                            <div>
+                                <label className="block text-sm font-bold text-slate-700 mb-1">Plan Name</label>
+                                <input
+                                    type="text"
+                                    value={editPlanData.title}
+                                    onChange={(e) => setEditPlanData({ ...editPlanData, title: e.target.value })}
+                                    className="w-full px-4 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 font-bold text-slate-700"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-bold text-slate-700 mb-1">Description</label>
+                                <textarea
+                                    value={editPlanData.description}
+                                    onChange={(e) => setEditPlanData({ ...editPlanData, description: e.target.value })}
+                                    className="w-full px-4 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 font-medium text-slate-600 h-24 resize-none"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-bold text-slate-700 mb-1">Total Budget (₹)</label>
+                                <input
+                                    type="number"
+                                    value={editPlanData.totalBudget}
+                                    onChange={(e) => setEditPlanData({ ...editPlanData, totalBudget: e.target.value })}
+                                    className="w-full px-4 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 font-bold text-slate-700"
+                                />
+                            </div>
+
+                            {/* Add Member Section */}
+                            <div className="pt-4 border-t border-slate-100">
+                                <label className="block text-sm font-bold text-slate-700 mb-2">Add Member</label>
+                                <div className="flex gap-2">
+                                    <input
+                                        type="text"
+                                        value={newMemberName}
+                                        onChange={(e) => setNewMemberName(e.target.value)}
+                                        placeholder="Enter member name"
+                                        className="flex-1 px-4 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 font-medium text-slate-700"
+                                    />
+                                    <button
+                                        onClick={handleAddMember}
+                                        disabled={!newMemberName.trim()}
+                                        className="px-4 py-2 bg-indigo-100 text-indigo-700 font-bold rounded-xl hover:bg-indigo-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                                    >
+                                        Add
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <div className="p-6 border-t border-slate-100 flex justify-end gap-3 bg-slate-50">
+                            <button
+                                onClick={() => setIsEditingPlan(false)}
+                                className="px-4 py-2 text-slate-600 font-bold hover:bg-slate-200 rounded-xl transition-colors"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={handleUpdatePlan}
+                                className="px-6 py-2 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 transition-colors shadow-lg shadow-blue-500/30"
+                            >
+                                Save Changes
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Confirm Remove Member Modal */}
+            <ConfirmModal
+                isOpen={removeMemberModal.show}
+                onClose={() => setRemoveMemberModal({ show: false, memberName: null })}
+                onConfirm={confirmRemoveMember}
+                title="Remove Member?"
+                message={`Are you sure you want to remove ${removeMemberModal.memberName} from this plan?`}
+                confirmText="Remove"
+                isDestructive={true}
             />
         </div>
     );

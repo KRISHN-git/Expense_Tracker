@@ -6,6 +6,7 @@ import { CATEGORIES, API_BASE_URL } from '../utils/constants';
 import { PlusCircle, Loader2, Users, Check } from 'lucide-react';
 import { cn } from '../utils/cn';
 
+
 const ExpenseForm = ({ onExpenseAdded, defaultPlanId = null }) => {
     const [amount, setAmount] = useState('');
     const [category, setCategory] = useState('');
@@ -25,6 +26,8 @@ const ExpenseForm = ({ onExpenseAdded, defaultPlanId = null }) => {
     // Group Expense Splitting State
     const [splitOption, setSplitOption] = useState('everyone'); // 'everyone' | 'custom'
     const [selectedMembers, setSelectedMembers] = useState([]);
+
+
 
     useEffect(() => {
         setIdempotencyKey(uuidv4());
@@ -59,6 +62,7 @@ const ExpenseForm = ({ onExpenseAdded, defaultPlanId = null }) => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         setLoading(true);
+
         setError(null);
         setSuccess(false);
 
@@ -67,24 +71,18 @@ const ExpenseForm = ({ onExpenseAdded, defaultPlanId = null }) => {
         if (amountInPaise <= 0) {
             setError("Amount must be positive.");
             setLoading(false);
+
             return;
         }
 
         try {
+            // ... (payload preparation)
             // Determine splitMembers
             let splitBetween = [];
             const selectedPlan = plans.find(p => p._id === planId);
 
             if (selectedPlan && selectedPlan.type === 'group') {
                 if (splitOption === 'everyone') {
-                    // Start with everyone (empty array means everyone backend side? 
-                    // Let's be explicit and send all names OR empty and handle in logic.
-                    // Implementation plan said: "If empty or null, assumes 'Everyone'". 
-                    // But for "Member Spending Breakdown", explicit is better.
-                    // Actually, if I send empty, I have to assume the group membership AT THAT TIME.
-                    // If membership changes later, historical expenses might get weird if based on "current members".
-                    // Best to snapshot the members involved.
-                    // The schema for `members` is `[{name: String}]`.
                     splitBetween = selectedPlan.members.map(m => m.name);
                 } else {
                     splitBetween = selectedMembers;
@@ -125,6 +123,7 @@ const ExpenseForm = ({ onExpenseAdded, defaultPlanId = null }) => {
             setError(err.response?.data?.message || 'Failed to add expense. Please try again.');
         } finally {
             setLoading(false);
+
         }
     };
 
@@ -140,7 +139,7 @@ const ExpenseForm = ({ onExpenseAdded, defaultPlanId = null }) => {
     };
 
     return (
-        <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden h-full flex flex-col font-sans">
+        <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden h-fit flex flex-col font-sans">
             <div className="bg-slate-50 px-6 py-4 border-b border-slate-200 flex justify-between items-center shrink-0">
                 <h2 className="text-lg font-bold text-slate-800 flex items-center gap-2">
                     <PlusCircle className="w-6 h-6 text-blue-600" />

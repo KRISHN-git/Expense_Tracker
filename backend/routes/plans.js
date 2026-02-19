@@ -8,6 +8,8 @@ const Expense = require('../models/Expense');
 // @desc    Get all plans for user with total spent
 // @route   GET /plans
 // @access  Private
+router.get('/ping', (req, res) => res.send('pong'));
+
 router.get('/', protect, async (req, res) => {
     try {
         // Use aggregation to join expenses and calculate total spent
@@ -50,6 +52,52 @@ router.get('/', protect, async (req, res) => {
         res.json(plans);
     } catch (err) {
         console.error("Error fetching plans:", err);
+        res.status(500).json({ message: 'Server Error' });
+    }
+});
+
+// Add member to plan (Moved to top to prevent route collision)
+// URL: /plans/:id/members/add
+router.put('/:id/members/add', protect, async (req, res) => {
+    console.log("Add Member Request:", req.params.id, req.body); // Debug Log
+    try {
+        const plan = await Plan.findById(req.params.id);
+
+        if (!plan) {
+            console.log("Plan not found"); // Debug Log
+            return res.status(404).json({ message: 'Plan not found' });
+        }
+
+        if (plan.user.toString() !== req.user.id) {
+            console.log("Not authorized"); // Debug Log
+            return res.status(401).json({ message: 'User not authorized' });
+        }
+
+        const { memberName } = req.body;
+
+        if (!memberName) {
+            console.log("Member name missing"); // Debug Log
+            return res.status(400).json({ message: 'Member name is required' });
+        }
+
+        // check if member exists
+        if (plan.members.some(m => m.name === memberName)) {
+            console.log("Member already exists"); // Debug Log
+            return res.status(400).json({ message: 'Member already exists' });
+        }
+
+        plan.members.push({ name: memberName });
+
+        // If plan type was personal, update to group if > 1 member (optional logic, but good for consistency)
+        if (plan.members.length > 1 && plan.type === 'personal') {
+            plan.type = 'group';
+        }
+
+        const updatedPlan = await plan.save();
+        console.log("Member added successfully"); // Debug Log
+        res.json(updatedPlan);
+    } catch (error) {
+        console.error("Error adding member:", error);
         res.status(500).json({ message: 'Server Error' });
     }
 });
@@ -103,6 +151,63 @@ router.post('/', protect, async (req, res) => {
         res.status(500).json({ message: 'Server Error' });
     }
 });
+
+// @desc    Update a plan
+// @route   PUT /plans/:id
+// @access  Private
+router.put('/:id', protect, async (req, res) => {
+    try {
+        const plan = await Plan.findById(req.params.id);
+
+        if (!plan) {
+            return res.status(404).json({ message: 'Plan not found' });
+        }
+
+        // Check user
+        if (plan.user.toString() !== req.user.id) {
+            return res.status(401).json({ message: 'User not authorized' });
+        }
+
+        plan.title = req.body.title || plan.title;
+        plan.description = req.body.description !== undefined ? req.body.description : plan.description;
+        plan.totalBudget = req.body.totalBudget !== undefined ? req.body.totalBudget : plan.totalBudget;
+
+        const updatedPlan = await plan.save();
+        res.json(updatedPlan);
+    } catch (error) {
+        res.status(500).json({ message: 'Server Error' });
+    }
+});
+
+// @desc    Remove a member from plan
+// @route   PUT /plans/:id/members/remove
+// @access  Private
+router.put('/:id/members/remove', protect, async (req, res) => {
+    try {
+        const plan = await Plan.findById(req.params.id);
+
+        if (!plan) {
+            return res.status(404).json({ message: 'Plan not found' });
+        }
+
+        if (plan.user.toString() !== req.user.id) {
+            return res.status(401).json({ message: 'User not authorized' });
+        }
+
+        const { memberName } = req.body;
+
+        // Remove member by name
+        plan.members = plan.members.filter(m => m.name !== memberName);
+
+        const updatedPlan = await plan.save();
+        res.json(updatedPlan);
+    } catch (error) {
+        console.error("Error removing member:", error);
+        res.status(500).json({ message: 'Server Error' });
+    }
+});
+
+
 
 // @desc    Delete a plan
 // @route   DELETE /plans/:id

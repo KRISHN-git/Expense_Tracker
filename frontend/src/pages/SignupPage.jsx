@@ -5,6 +5,7 @@ import { GoogleLogin } from '@react-oauth/google';
 import { Mail, Lock, User, Loader2, Eye, EyeOff } from 'lucide-react';
 import AuthLayout from '../components/AuthLayout';
 import { API_BASE_URL } from '../utils/constants';
+import { motion } from 'framer-motion';
 
 const SignupPage = () => {
     const [name, setName] = useState('');
@@ -52,85 +53,138 @@ const SignupPage = () => {
         }
     };
 
-    return (
-        <AuthLayout type="signup">
-            {error && (
-                <div className="bg-red-50 text-red-600 p-4 rounded-xl mb-6 text-sm font-medium border border-red-100 flex items-center gap-2 animate-fade-in">
-                    <div className="w-1.5 h-1.5 rounded-full bg-red-500"></div>
-                    {error}
-                </div>
-            )}
+    const containerVariants = {
+        hidden: { opacity: 0 },
+        visible: {
+            opacity: 1,
+            transition: {
+                staggerChildren: 0.1,
+                delayChildren: 0.2
+            }
+        }
+    };
 
-            <form onSubmit={handleSubmit} className="space-y-5">
-                <div>
+    const itemVariants = {
+        hidden: { opacity: 0, y: 15 },
+        visible: {
+            opacity: 1,
+            y: 0,
+            transition: {
+                type: "spring",
+                stiffness: 300,
+                damping: 24
+            }
+        }
+    };
+
+    return (
+        <>
+            {/* Error Message */}
+            <motion.div
+                initial={{ opacity: 0, height: 0, marginBottom: 0 }}
+                animate={{ opacity: error ? 1 : 0, height: error ? 'auto' : 0, marginBottom: error ? 16 : 0 }}
+                className="overflow-hidden"
+            >
+                {error && (
+                    <div className="bg-red-50 text-red-600 p-3 rounded-xl text-sm font-medium border border-red-100 flex items-center gap-2">
+                        <div className="w-1.5 h-1.5 rounded-full bg-red-500"></div>
+                        {error}
+                    </div>
+                )}
+            </motion.div>
+
+            <motion.form
+                variants={containerVariants}
+                initial="hidden"
+                animate="visible"
+                onSubmit={handleSubmit}
+                className="space-y-4"
+            >
+                <motion.div variants={itemVariants}>
                     <div className="relative group">
+                        <User className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-blue-500 transition-colors w-5 h-5 pointer-events-none" />
                         <input
                             type="text"
                             value={name}
                             onChange={(e) => setName(e.target.value)}
-                            className="block w-full px-5 py-4 bg-slate-50 border border-transparent focus:bg-white border-slate-200 rounded-xl text-slate-800 placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:ring-0 transition-all font-medium"
+                            className="block w-full pl-12 pr-4 py-3 bg-slate-50 border border-transparent border-slate-200 rounded-xl text-slate-800 placeholder-slate-400 focus:bg-white focus:outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all font-medium"
                             placeholder="Full Name"
                             required
                         />
                     </div>
-                </div>
+                </motion.div>
 
-                <div>
+                <motion.div variants={itemVariants}>
                     <div className="relative group">
+                        <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-blue-500 transition-colors w-5 h-5 pointer-events-none" />
                         <input
                             type="email"
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
-                            className="block w-full px-5 py-4 bg-slate-50 border border-transparent focus:bg-white border-slate-200 rounded-xl text-slate-800 placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:ring-0 transition-all font-medium"
+                            className="block w-full pl-12 pr-4 py-3 bg-slate-50 border border-transparent border-slate-200 rounded-xl text-slate-800 placeholder-slate-400 focus:bg-white focus:outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all font-medium"
                             placeholder="Email Address"
                             required
                         />
                     </div>
-                </div>
+                </motion.div>
 
-                <div>
+                <motion.div variants={itemVariants}>
                     <div className="relative group">
+                        <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-blue-500 transition-colors w-5 h-5 pointer-events-none" />
                         <input
                             type={showPassword ? "text" : "password"}
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
-                            className="block w-full px-5 py-4 bg-slate-50 border border-transparent focus:bg-white border-slate-200 rounded-xl text-slate-800 placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:ring-0 transition-all font-medium pr-12"
+                            className="block w-full pl-12 pr-12 py-3 bg-slate-50 border border-transparent border-slate-200 rounded-xl text-slate-800 placeholder-slate-400 focus:bg-white focus:outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all font-medium"
                             placeholder="Password"
                             required
                         />
                         <button
                             type="button"
                             onClick={() => setShowPassword(!showPassword)}
-                            className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 focus:outline-none"
+                            className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 focus:outline-none hover:bg-slate-100 p-1 rounded-full transition-colors"
                         >
                             {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                         </button>
                     </div>
-                </div>
+                </motion.div>
 
-                <div className="text-xs text-slate-500 mt-2 mb-6 px-1">
-                    By signing up, you agree to our <a href="#" className="underline hover:text-slate-800">Terms</a> and <a href="#" className="underline hover:text-slate-800">Privacy Policy</a>.
-                </div>
+                <motion.div variants={itemVariants} className="text-xs text-slate-500 mt-1 mb-4 px-1">
+                    By signing up, you agree to our <a href="#" className="underline hover:text-slate-800">Terms</a>.
+                </motion.div>
 
-                <button
+                <motion.button
+                    variants={itemVariants}
+                    whileHover={{ scale: 1.01 }}
+                    whileTap={{ scale: 0.99 }}
                     type="submit"
                     disabled={loading}
-                    className="w-full flex justify-center py-4 px-6 border border-transparent rounded-xl shadow-lg shadow-blue-600/20 text-base font-bold text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all transform hover:scale-[1.01] active:scale-[0.98]"
+                    className="w-full flex justify-center py-3.5 px-6 border border-transparent rounded-xl shadow-lg shadow-blue-600/20 text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all"
                 >
                     {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Create Account'}
-                </button>
-            </form>
+                </motion.button>
+            </motion.form>
 
-            <div className="mt-8 relative mb-8">
+            <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.4, duration: 0.5 }}
+                className="mt-6 relative mb-6"
+            >
                 <div className="absolute inset-0 flex items-center">
                     <div className="w-full border-t border-slate-100"></div>
                 </div>
-                <div className="relative flex justify-center text-sm">
+                <div className="relative flex justify-center text-xs">
                     <span className="px-4 bg-white text-slate-400 font-medium">Or continue with</span>
                 </div>
-            </div>
+            </motion.div>
 
-            <div className="flex justify-center">
+            <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.5, duration: 0.5 }}
+                className="flex justify-center"
+            >
                 <GoogleLogin
                     onSuccess={handleGoogleSuccess}
                     onError={() => setError('Google Login Failed')}
@@ -138,10 +192,10 @@ const SignupPage = () => {
                     size="large"
                     text="continue_with"
                     theme="outline"
-                    width="300"
+                    width="280"
                 />
-            </div>
-        </AuthLayout>
+            </motion.div>
+        </>
     );
 };
 

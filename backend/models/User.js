@@ -28,6 +28,10 @@ const UserSchema = new mongoose.Schema({
     picture: {
         type: String
     },
+    monthlyBudget: {
+        type: Number,
+        default: 0
+    },
     createdAt: {
         type: Date,
         default: Date.now

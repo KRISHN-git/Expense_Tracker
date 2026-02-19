@@ -8,6 +8,10 @@ import { Link } from 'react-router-dom'
 import { LogOut, PieChart } from 'lucide-react'
 import { startOfDay, endOfDay, startOfWeek, endOfWeek, startOfMonth, endOfMonth, formatISO } from 'date-fns';
 import ConfirmModal from '../components/ConfirmModal';
+import Analytics from '../components/Analytics';
+import BudgetTracker from '../components/BudgetTracker';
+import { updateProfile } from '../services/api';
+
 
 function Dashboard() {
     const [expenses, setExpenses] = useState([]);
@@ -18,9 +22,42 @@ function Dashboard() {
     const [dateFilter, setDateFilter] = useState('');
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [expenseToDelete, setExpenseToDelete] = useState(null);
-    const { user, logout } = useAuth();
+    const { user, logout, setUser } = useAuth(); // Need setUser to update local user state on budget change
+
+
+    // Budget State - derived from user but can be updated
+    const [monthlyBudget, setMonthlyBudget] = useState(user?.monthlyBudget || 0);
+
+    // Sync local budget state when user loads
+    useEffect(() => {
+        if (user?.monthlyBudget) {
+            setMonthlyBudget(user.monthlyBudget);
+        }
+    }, [user]);
+
+    const handleUpdateBudget = async (newAmount) => {
+
+        try {
+            console.log("Updating budget to:", newAmount);
+            const updatedUser = await updateProfile({ monthlyBudget: newAmount });
+            console.log("Budget update success:", updatedUser);
+            setUser(prev => ({ ...prev, monthlyBudget: updatedUser.monthlyBudget }));
+            setMonthlyBudget(updatedUser.monthlyBudget);
+        } catch (err) {
+            console.error("Failed to update budget", err);
+            // Log full error response if available
+            if (err.response) {
+                console.error("Error response:", err.response.data);
+                console.error("Error status:", err.response.status);
+            }
+            alert(`Failed to save budget goal: ${err.response?.data?.message || err.message}`);
+        } finally {
+
+        }
+    };
 
     const fetchExpenses = async () => {
+        // ... (fetchExpenses stays same, local loading is fine for initial fetch)
         setLoading(true);
         try {
             const params = { excludePlans: true }; // Exclude plan transactions
@@ -126,6 +163,7 @@ function Dashboard() {
     const confirmDelete = async () => {
         if (!expenseToDelete) return;
 
+
         try {
             await deleteExpense(expenseToDelete);
             setExpenses(prev => prev.filter(exp => exp._id !== expenseToDelete));
@@ -136,6 +174,7 @@ function Dashboard() {
         } finally {
             setIsDeleteModalOpen(false);
             setExpenseToDelete(null);
+
         }
     };
 
@@ -169,15 +208,22 @@ function Dashboard() {
                 </div>
             </header>
 
-            <div className="flex-1 flex flex-col lg:flex-row lg:overflow-hidden">
-                <div className="flex-1 max-w-7xl mx-auto w-full p-4 grid grid-cols-1 lg:grid-cols-12 gap-6 h-auto lg:h-full">
+            {/* Allow scrolling on desktop to see Analytics below */}
+            <div className="flex-1 flex flex-col lg:flex-row lg:overflow-y-auto">
+                <div className="flex-1 max-w-7xl mx-auto w-full p-4 grid grid-cols-1 lg:grid-cols-12 gap-6 h-auto">
                     {/* Left Sidebar: Form */}
-                    <div className="lg:col-span-4 h-auto lg:h-full lg:overflow-y-auto pr-1">
+                    <div className="lg:col-span-4 h-fit lg:overflow-y-visible pr-1">
                         <ExpenseForm onExpenseAdded={handleExpenseAdded} />
+
+                        <BudgetTracker
+                            expenses={expenses}
+                            monthlyBudget={monthlyBudget}
+                            onUpdateBudget={handleUpdateBudget}
+                        />
                     </div>
 
                     {/* Right Content: List & Summary */}
-                    <div className="lg:col-span-8 h-auto lg:h-full flex flex-col lg:overflow-hidden">
+                    <div className="lg:col-span-8 h-auto flex flex-col">
                         <ExpenseList
                             expenses={expenses}
                             loading={loading}
@@ -190,6 +236,15 @@ function Dashboard() {
                             setDateFilter={setDateFilter}
                             onDelete={handleDeleteExpense}
                         />
+
+                        {/* Analytics Section (Visible on scroll) */}
+                        <div className="mt-8 pb-10">
+                            <Analytics
+                                expenses={expenses}
+                                monthlyBudget={monthlyBudget}
+                                onUpdateBudget={handleUpdateBudget}
+                            />
+                        </div>
                     </div>
                 </div>
             </div>

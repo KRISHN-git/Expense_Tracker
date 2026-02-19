@@ -1,12 +1,13 @@
-
 const express = require('express');
 const router = express.Router();
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { OAuth2Client } = require('google-auth-library');
 const User = require('../models/User');
+const { protect } = require('../middleware/authMiddleware');
 
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+
 
 // Generate JWT
 const generateToken = (id) => {
@@ -126,7 +127,61 @@ router.post('/google', async (req, res) => {
 // @desc    Get user data
 // @route   GET /auth/me
 // @access  Private
-const { protect } = require('../middleware/authMiddleware');
+const MonthlyBudget = require('../models/MonthlyBudget');
+
+// ... existing code ...
+
+// @desc    Update user profile (budget)
+// @route   PUT /auth/profile
+// @access  Private
+router.put('/profile', protect, async (req, res) => {
+    try {
+        const user = await User.findById(req.user.id);
+
+        if (user) {
+            user.name = req.body.name || user.name;
+            user.email = req.body.email || user.email;
+
+            // Update Budget & Log History
+            if (req.body.monthlyBudget !== undefined) {
+                user.monthlyBudget = req.body.monthlyBudget;
+
+                // Track history for current month
+                const now = new Date();
+                const month = now.getMonth() + 1; // 1-12
+                const year = now.getFullYear();
+
+                await MonthlyBudget.findOneAndUpdate(
+                    { user: user._id, month, year },
+                    { amount: req.body.monthlyBudget, updatedAt: now },
+                    { upsert: true, new: true }
+                );
+            }
+
+            if (req.body.password) {
+                // Hash password
+                const salt = await bcrypt.genSalt(10);
+                user.password = await bcrypt.hash(req.body.password, salt);
+            }
+
+            const updatedUser = await user.save();
+
+            res.json({
+                _id: updatedUser.id,
+                name: updatedUser.name,
+                email: updatedUser.email,
+                monthlyBudget: updatedUser.monthlyBudget,
+                token: generateToken(updatedUser._id),
+            });
+        } else {
+            res.status(404).json({ message: 'User not found' });
+        }
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Server Error' });
+    }
+});
+
 router.get('/me', protect, async (req, res) => {
     res.status(200).json(req.user);
 });
