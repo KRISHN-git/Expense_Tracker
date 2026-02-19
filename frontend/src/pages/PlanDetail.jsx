@@ -2,10 +2,13 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { Loader2, ArrowLeft, MoreVertical, Wallet, Calendar, TrendingUp, Plus, Users, Trash2 } from 'lucide-react';
+import { isSameDay, isSameWeek, isSameMonth } from 'date-fns';
 import ExpenseList from '../components/ExpenseList';
 import ExpenseForm from '../components/ExpenseForm';
 import { cn } from '../utils/cn';
 import { API_BASE_URL } from '../utils/constants';
+import { useToast } from '../context/ToastContext'; // Import
+import ConfirmModal from '../components/ConfirmModal'; // Import
 
 /*
   Improved PlanDetail Layout:
@@ -21,6 +24,12 @@ const PlanDetail = () => {
     const [expenses, setExpenses] = useState([]);
     const [loading, setLoading] = useState(true);
     const [showAddExpenseMobile, setShowAddExpenseMobile] = useState(false);
+
+    const { addToast } = useToast();
+
+    // Modal States
+    const [deletePlanModal, setDeletePlanModal] = useState(false);
+    const [deleteExpenseModal, setDeleteExpenseModal] = useState({ show: false, expenseId: null });
 
     // Filters for ExpenseList
     const [categoryFilter, setCategoryFilter] = useState('');
@@ -42,6 +51,7 @@ const PlanDetail = () => {
             setExpenses(data.expenses);
         } catch (error) {
             console.error('Failed to fetch plan details', error);
+            addToast('Failed to load plan details.', 'error');
         } finally {
             setLoading(false);
         }
@@ -50,36 +60,45 @@ const PlanDetail = () => {
     const handleExpenseAdded = (newExpense) => {
         setExpenses(prev => [newExpense, ...prev]);
         setShowAddExpenseMobile(false);
+        addToast('Transaction added!', 'success');
     };
 
-    const handleDeletePlan = async () => {
-        if (window.confirm("Are you sure you want to delete this plan? This action cannot be undone.")) {
-            try {
-                const token = localStorage.getItem('token');
-                await axios.delete(`${API_BASE_URL}/plans/${id}`, {
-                    headers: { Authorization: `Bearer ${token}` }
-                });
-                navigate('/plans');
-            } catch (error) {
-                console.error("Failed to delete plan", error);
-                alert("Failed to delete plan.");
-            }
+    const confirmDeletePlan = async () => {
+        try {
+            const token = localStorage.getItem('token');
+            await axios.delete(`${API_BASE_URL}/plans/${id}`, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            navigate('/plans');
+            addToast('Plan deleted successfully', 'success');
+        } catch (error) {
+            console.error("Failed to delete plan", error);
+            addToast('Failed to delete plan.', 'error');
+        } finally {
+            setDeletePlanModal(false);
         }
     };
 
-    const handleDeleteExpense = async (expenseId) => {
-        if (window.confirm("Delete this expense?")) {
-            try {
-                const token = localStorage.getItem('token');
-                await axios.delete(`${API_BASE_URL}/expenses/${expenseId}`, {
-                    headers: { Authorization: `Bearer ${token}` }
-                });
-                setExpenses(prev => prev.filter(e => e._id !== expenseId));
-            } catch (error) {
-                console.error("Failed to delete expense", error);
-                alert("Failed to delete expense.");
-            }
+    const confirmDeleteExpense = async () => {
+        if (!deleteExpenseModal.expenseId) return;
+        try {
+            const token = localStorage.getItem('token');
+            await axios.delete(`${API_BASE_URL}/expenses/${deleteExpenseModal.expenseId}`, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            setExpenses(prev => prev.filter(e => e._id !== deleteExpenseModal.expenseId));
+            addToast('Expense deleted.', 'success');
+        } catch (error) {
+            console.error("Failed to delete expense", error);
+            addToast('Failed to delete expense.', 'error');
+        } finally {
+            setDeleteExpenseModal({ show: false, expenseId: null });
         }
+    };
+
+    // Triggered by ExpenseList
+    const handleDeleteExpenseClick = (expenseId) => {
+        setDeleteExpenseModal({ show: true, expenseId });
     };
 
     const [selectedMember, setSelectedMember] = useState(null);
@@ -122,8 +141,16 @@ const PlanDetail = () => {
 
             // Date Filter
             if (dateFilter) {
-                const expDate = new Date(exp.date).toISOString().split('T')[0];
-                if (expDate !== dateFilter) return false;
+                const expDate = new Date(exp.date);
+                const now = new Date();
+
+                if (dateFilter === 'today') {
+                    if (!isSameDay(expDate, now)) return false;
+                } else if (dateFilter === 'week') {
+                    if (!isSameWeek(expDate, now)) return false;
+                } else if (dateFilter === 'month') {
+                    if (!isSameMonth(expDate, now)) return false;
+                }
             }
 
             // Member Filter
@@ -170,7 +197,7 @@ const PlanDetail = () => {
                         Back to Plans
                     </Link>
                     <button
-                        onClick={handleDeletePlan}
+                        onClick={() => setDeletePlanModal(true)}
                         className="text-slate-400 hover:text-red-600 transition-colors p-2 rounded-lg hover:bg-red-50"
                         title="Delete Plan"
                     >
@@ -276,13 +303,21 @@ const PlanDetail = () => {
                                         )}>
                                             ₹{(totalSpent / 100).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
                                         </p>
+
                                         {budget > 0 && (
-                                            <div className="mt-2 pt-2 border-t border-slate-100">
+                                            <div className="mt-2 pt-2 border-t border-slate-100 mb-2">
                                                 <p className="text-xs text-slate-400 font-medium">
                                                     of <span className="text-slate-700 font-bold">₹{(budget / 100).toLocaleString('en-IN')}</span> budget
                                                 </p>
                                             </div>
                                         )}
+
+                                        <div className="flex items-center gap-2">
+                                            <span className="bg-blue-100 text-blue-700 px-2 py-0.5 rounded-md text-xs font-bold">
+                                                {expenses.length}
+                                            </span>
+                                            <span className="text-xs text-slate-500 font-medium">Transactions</span>
+                                        </div>
                                     </div>
                                 </div>
 
@@ -363,7 +398,8 @@ const PlanDetail = () => {
                                         dateFilter={dateFilter}
                                         setDateFilter={setDateFilter}
                                         isPlanView={true}
-                                        onDelete={handleDeleteExpense}
+                                        onDelete={handleDeleteExpenseClick} // Pass the handler
+                                        hideTotal={true} // Hide the blue total card
                                     />
                                 </div>
                             </div>
@@ -371,6 +407,26 @@ const PlanDetail = () => {
                     </div>
                 </div>
             </div>
+
+            {/* Confirm Plan Delete Modal */}
+            <ConfirmModal
+                isOpen={deletePlanModal}
+                onClose={() => setDeletePlanModal(false)}
+                onConfirm={confirmDeletePlan}
+                title="Delete Plan?"
+                message="Are you sure you want to delete this plan? This action cannot be undone."
+                confirmText="Delete Plan"
+            />
+
+            {/* Confirm Expense Delete Modal */}
+            <ConfirmModal
+                isOpen={deleteExpenseModal.show}
+                onClose={() => setDeleteExpenseModal({ show: false, expenseId: null })}
+                onConfirm={confirmDeleteExpense}
+                title="Delete Expense?"
+                message="Are you sure you want to delete this transaction?"
+                confirmText="Delete Transaction"
+            />
         </div>
     );
 };

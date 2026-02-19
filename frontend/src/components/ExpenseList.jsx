@@ -14,7 +14,8 @@ const ExpenseList = ({
     setSortOrder,
     dateFilter,
     setDateFilter,
-    onDelete // Optional callback
+    onDelete, // Optional callback
+    hideTotal = false // New prop
 }) => {
 
     const totalAmount = expenses.reduce((sum, expense) => sum + expense.amount, 0);
@@ -32,22 +33,24 @@ const ExpenseList = ({
         <div className="flex flex-col h-full gap-6 font-sans">
             {/* Summary Grid */}
             {!loading && !error && expenses.length > 0 && (
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 shrink-0">
+                <div className={`grid grid-cols-1 ${hideTotal ? '' : 'md:grid-cols-3'} gap-4 shrink-0`}>
                     {/* Total Card */}
-                    <div className="bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl p-5 text-white shadow-lg shadow-blue-500/20 flex flex-col justify-between relative overflow-hidden group">
-                        <div className="absolute top-0 right-0 w-24 h-24 bg-white/10 rounded-full -mr-10 -mt-10 blur-xl group-hover:bg-white/20 transition-all"></div>
-                        <div>
-                            <p className="text-blue-100 text-xs font-bold uppercase tracking-wider mb-1">Total Spending</p>
-                            <h3 className="text-3xl font-black">₹{(totalAmount / 100).toFixed(2)}</h3>
+                    {!hideTotal && (
+                        <div className="bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl p-5 text-white shadow-lg shadow-blue-500/20 flex flex-col justify-between relative overflow-hidden group">
+                            <div className="absolute top-0 right-0 w-24 h-24 bg-white/10 rounded-full -mr-10 -mt-10 blur-xl group-hover:bg-white/20 transition-all"></div>
+                            <div>
+                                <p className="text-blue-100 text-xs font-bold uppercase tracking-wider mb-1">Total Spending</p>
+                                <h3 className="text-3xl font-black">₹{(totalAmount / 100).toFixed(2)}</h3>
+                            </div>
+                            <div className="mt-1 flex items-center gap-2 text-blue-50 text-sm font-medium">
+                                <span className="bg-white/20 px-2 py-1 rounded-md text-xs font-bold text-white">{expenses.length}</span>
+                                <span>Transactions</span>
+                            </div>
                         </div>
-                        <div className="mt-1 flex items-center gap-2 text-blue-50 text-sm font-medium">
-                            <span className="bg-white/20 px-2 py-1 rounded-md text-xs font-bold text-white">{expenses.length}</span>
-                            <span>Transactions</span>
-                        </div>
-                    </div>
+                    )}
 
                     {/* Category Breakdown */}
-                    <div className="md:col-span-2 bg-white rounded-2xl border border-slate-200 p-5 shadow-sm flex flex-col gap-3">
+                    <div className={`${hideTotal ? 'w-full' : 'md:col-span-2'} bg-white rounded-2xl border border-slate-200 p-5 shadow-sm flex flex-col gap-3`}>
                         <p className="text-slate-500 text-xs font-bold uppercase tracking-wider">Category Breakdown</p>
                         <div className="flex gap-3 overflow-x-auto custom-scrollbar pb-2 items-center h-full">
                             {Object.entries(categorySummary).map(([cat, amount]) => {
@@ -85,20 +88,16 @@ const ExpenseList = ({
                     </div>
 
                     <div className="flex-1 min-w-[150px] relative">
-                        <input
-                            type="date"
+                        <select
                             value={dateFilter}
                             onChange={(e) => setDateFilter(e.target.value)}
                             className="w-full text-sm font-semibold rounded-lg border-slate-300 py-2.5 pl-3 pr-8 focus:border-blue-600 focus:ring-blue-600 shadow-sm bg-white"
-                        />
-                        {dateFilter && (
-                            <button
-                                onClick={() => setDateFilter('')}
-                                className="absolute right-8 top-1/2 -translate-y-1/2 text-sm text-slate-400 hover:text-red-500 font-bold p-1"
-                            >
-                                ✕
-                            </button>
-                        )}
+                        >
+                            <option value="">All Time</option>
+                            <option value="today">Today</option>
+                            <option value="week">This Week</option>
+                            <option value="month">This Month</option>
+                        </select>
                     </div>
 
                     <div className="flex-1 min-w-[150px]">
@@ -109,7 +108,6 @@ const ExpenseList = ({
                         >
                             <option value="date_desc">Newest First</option>
                             <option value="date_asc">Oldest First</option>
-                            <option value="created_desc">Added Recently</option>
                         </select>
                     </div>
                 </div>

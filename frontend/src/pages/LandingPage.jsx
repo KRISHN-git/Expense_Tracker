@@ -15,9 +15,9 @@ const LandingPage = () => {
                         </div>
                         ExpenseTracker
                     </div>
-                    <div className="space-x-3">
-                        <Link to="/login" className="text-sm font-bold text-slate-600 hover:text-blue-600 transition-colors">Login</Link>
-                        <Link to="/signup" className="text-sm bg-slate-900 text-white px-4 py-2 rounded-lg font-bold hover:bg-slate-800 transition">Get Started</Link>
+                    <div className="space-x-2 sm:space-x-3 flex items-center">
+                        <Link to="/login" className="text-sm font-bold text-slate-600 hover:text-blue-600 transition-colors px-2 py-1">Login</Link>
+                        <Link to="/signup" className="text-xs sm:text-sm bg-slate-900 text-white px-3 py-2 sm:px-4 sm:py-2 rounded-lg font-bold hover:bg-slate-800 transition">Get Started</Link>
                     </div>
                 </div>
             </header>

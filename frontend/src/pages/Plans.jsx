@@ -1,15 +1,21 @@
-
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
+import { useToast } from '../context/ToastContext'; // Import Toast
 import { API_BASE_URL } from '../utils/constants';
 import { Plus, ArrowRight, Loader2, Calendar, ArrowLeft, User, Users, X, Trash2 } from 'lucide-react';
+import ConfirmModal from '../components/ConfirmModal'; // Import Modal
 
 const Plans = () => {
     const [plans, setPlans] = useState([]);
     const [loading, setLoading] = useState(true);
     const [showCreateModal, setShowCreateModal] = useState(false);
+
+    // Delete Modal State
+    const [deleteModal, setDeleteModal] = useState({ show: false, planId: null, planName: '' });
+
+    const { addToast } = useToast(); // Use Toast
 
     // Updated state for new plan creation
     const [newPlan, setNewPlan] = useState({
@@ -38,6 +44,7 @@ const Plans = () => {
             setPlans(data);
         } catch (error) {
             console.error('Failed to fetch plans', error);
+            addToast('Failed to load plans.', 'error');
         } finally {
             setLoading(false);
         }
@@ -65,27 +72,37 @@ const Plans = () => {
             setNewPlan({ title: '', description: '', totalBudget: '', type: 'personal', members: [] });
             setMemberInput('');
             fetchPlans();
+            addToast('Plan created successfully!', 'success');
         } catch (error) {
             console.error('Failed to create plan', error);
+            addToast('Failed to create plan.', 'error');
         }
     };
 
-    const handleDeletePlan = async (e, planId) => {
-        e.preventDefault(); // Prevent link navigation
+    // Open Modal
+    const handleDeleteClick = (e, plan) => {
+        e.preventDefault();
         e.stopPropagation();
+        setDeleteModal({ show: true, planId: plan._id, planName: plan.title });
+    };
 
-        if (window.confirm("Are you sure you want to delete this plan? All associated expenses will also be deleted.")) {
-            try {
-                const token = localStorage.getItem('token');
-                await axios.delete(`${API_BASE_URL}/plans/${planId}`, {
-                    headers: { Authorization: `Bearer ${token}` }
-                });
-                // Remove from local state
-                setPlans(plans.filter(p => p._id !== planId));
-            } catch (error) {
-                console.error("Failed to delete plan", error);
-                alert("Failed to delete plan. Please try again.");
-            }
+    // Actual Delete Logic
+    const confirmDelete = async () => {
+        if (!deleteModal.planId) return;
+
+        try {
+            const token = localStorage.getItem('token');
+            await axios.delete(`${API_BASE_URL}/plans/${deleteModal.planId}`, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            // Remove from local state
+            setPlans(plans.filter(p => p._id !== deleteModal.planId));
+            addToast('Plan deleted successfully.', 'success');
+        } catch (error) {
+            console.error("Failed to delete plan", error);
+            addToast('Failed to delete plan. Please try again.', 'error');
+        } finally {
+            setDeleteModal({ show: false, planId: null, planName: '' });
         }
     };
 
@@ -180,7 +197,7 @@ const Plans = () => {
                                         </div>
                                         <div className="flex items-center gap-2">
                                             <button
-                                                onClick={(e) => handleDeletePlan(e, plan._id)}
+                                                onClick={(e) => handleDeleteClick(e, plan)}
                                                 className="p-2 text-slate-300 hover:text-red-500 transition-colors z-10"
                                                 title="Delete Plan"
                                             >
@@ -339,6 +356,16 @@ const Plans = () => {
                     </div>
                 </div>
             )}
+
+            {/* Confirm Delete Modal */}
+            <ConfirmModal
+                isOpen={deleteModal.show}
+                onClose={() => setDeleteModal({ show: false, planId: null, planName: '' })}
+                onConfirm={confirmDelete}
+                title="Delete Plan?"
+                message={`Are you sure you want to delete "${deleteModal.planName}"? This action cannot be undone and all distinct expenses will be deleted.`}
+                confirmText="Delete Plan"
+            />
         </div>
     );
 };

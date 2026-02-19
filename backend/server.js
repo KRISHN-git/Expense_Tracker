@@ -15,13 +15,8 @@ const PORT = process.env.PORT || 5000;
 // Middleware
 // Middleware
 app.use(cors({
-    origin: [
-        'http://localhost:5173',
-        'https://expense-tracker-q6my.vercel.app',
-        'https://expense-tracker-q6my.vercel.app/',
-        'https://expense-tracker-pi-swart-90.vercel.app' // Backend self-origin just in case
-    ],
-    methods: ['GET', 'POST'],
+    origin: true, // Allow all origins for now to fix Vercel/CORS issues
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     credentials: true
 }));
 app.use(express.json());

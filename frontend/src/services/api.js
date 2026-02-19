@@ -38,4 +38,9 @@ export const createExpense = async (expenseData, idempotencyKey) => {
     return response.data;
 };
 
+export const deleteExpense = async (id) => {
+    const response = await api.delete(`/${id}`);
+    return response.data;
+};
+
 export default api;

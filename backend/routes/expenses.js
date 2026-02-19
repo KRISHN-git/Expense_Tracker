@@ -82,22 +82,38 @@ router.get('/', protect, async (req, res) => {
         query.plan = planId;
     }
 
-    if (date) {
-        const startDate = new Date(date);
-        startDate.setUTCHours(0, 0, 0, 0);
+    // Exclude Plan Expenses (for Dashboard)
+    if (req.query.excludePlans === 'true') {
+        // This ensures we get expenses where plan is either explicitly null or the field doesn't exist
+        query.$or = [{ plan: null }, { plan: { $exists: false } }];
+    }
 
-        const endDate = new Date(date);
-        endDate.setUTCHours(23, 59, 59, 999);
+    // Date Filter (Range or Single Date)
+    const { startDate, endDate } = req.query;
+
+    if (startDate && endDate) {
+        query.date = {
+            $gte: new Date(startDate).toISOString(),
+            $lte: new Date(endDate).toISOString()
+        };
+    } else if (date) {
+        // Fallback for single date (backward compatibility)
+        const start = new Date(date);
+        start.setUTCHours(0, 0, 0, 0);
+
+        const end = new Date(date);
+        end.setUTCHours(23, 59, 59, 999);
 
         query.date = {
-            $gte: startDate.toISOString(),
-            $lte: endDate.toISOString()
+            $gte: start.toISOString(),
+            $lte: end.toISOString()
         };
     }
 
     let sortOption = {};
     if (sort === 'date_asc') {
         sortOption.date = 1;
+        sortOption.createdAt = 1; // Secondary sort for same-day expenses
     } else if (sort === 'amount_desc') {
         sortOption.amount = -1;
     } else if (sort === 'amount_asc') {
@@ -105,6 +121,7 @@ router.get('/', protect, async (req, res) => {
     } else {
         // Default: newest first
         sortOption.date = -1;
+        sortOption.createdAt = -1; // Secondary sort for same-day expenses
     }
 
     try {

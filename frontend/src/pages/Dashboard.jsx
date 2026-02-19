@@ -2,10 +2,12 @@
 import React, { useState, useEffect } from 'react'
 import ExpenseForm from '../components/ExpenseForm'
 import ExpenseList from '../components/ExpenseList'
-import { getExpenses } from '../services/api'
+import { getExpenses, deleteExpense } from '../services/api'
 import { useAuth } from '../context/AuthContext'
 import { Link } from 'react-router-dom'
-import { LogOut, PieChart, Calendar } from 'lucide-react'
+import { LogOut, PieChart } from 'lucide-react'
+import { startOfDay, endOfDay, startOfWeek, endOfWeek, startOfMonth, endOfMonth, formatISO } from 'date-fns';
+import ConfirmModal from '../components/ConfirmModal';
 
 function Dashboard() {
     const [expenses, setExpenses] = useState([]);
@@ -14,20 +16,72 @@ function Dashboard() {
     const [categoryFilter, setCategoryFilter] = useState('');
     const [sortOrder, setSortOrder] = useState('date_desc');
     const [dateFilter, setDateFilter] = useState('');
+    const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+    const [expenseToDelete, setExpenseToDelete] = useState(null);
     const { user, logout } = useAuth();
 
     const fetchExpenses = async () => {
         setLoading(true);
         try {
-            const params = {};
+            const params = { excludePlans: true }; // Exclude plan transactions
             if (categoryFilter) params.category = categoryFilter;
-            if (dateFilter) params.date = dateFilter;
+
+            // Handle Date Filter
+            if (dateFilter) {
+                const now = new Date();
+                let start, end;
+
+                if (dateFilter === 'today') {
+                    start = startOfDay(now);
+                    end = endOfDay(now);
+                } else if (dateFilter === 'week') {
+                    start = startOfWeek(now);
+                    end = endOfWeek(now);
+                } else if (dateFilter === 'month') {
+                    start = startOfMonth(now);
+                    end = endOfMonth(now);
+                }
+
+                if (start && end) {
+                    params.startDate = start.toISOString();
+                    params.endDate = end.toISOString();
+                }
+            }
 
             // Handle sort
             params.sort = sortOrder;
 
             const data = await getExpenses(params);
-            setExpenses(data);
+
+            // Robust Client-Side Filtering (in case backend is stale)
+            let processedData = data.filter(exp => !exp.plan);
+
+            // Robust Client-Side Sorting
+            processedData.sort((a, b) => {
+                const dateA = new Date(a.date);
+                const dateB = new Date(b.date);
+
+                if (sortOrder === 'date_desc') {
+                    // Newest First: If dates are same, use createdAt
+                    if (dateA.getTime() === dateB.getTime()) {
+                        return new Date(b.createdAt || 0) - new Date(a.createdAt || 0);
+                    }
+                    return dateB - dateA;
+                } else if (sortOrder === 'date_asc') {
+                    // Oldest First
+                    if (dateA.getTime() === dateB.getTime()) {
+                        return new Date(a.createdAt || 0) - new Date(b.createdAt || 0);
+                    }
+                    return dateA - dateB;
+                } else if (sortOrder === 'amount_desc') {
+                    return b.amount - a.amount;
+                } else if (sortOrder === 'amount_asc') {
+                    return a.amount - b.amount;
+                }
+                return 0;
+            });
+
+            setExpenses(processedData);
             setError(null);
         } catch (err) {
             setError('Failed to fetch expenses.');
@@ -42,7 +96,47 @@ function Dashboard() {
     }, [categoryFilter, sortOrder, dateFilter]);
 
     const handleExpenseAdded = (newExpense) => {
-        setExpenses(prev => [newExpense, ...prev]);
+        // If the expense belongs to a plan, do not add it to the dashboard list
+        if (newExpense.plan) return;
+
+        setExpenses(prev => {
+            const updated = [newExpense, ...prev];
+            // Re-sort on add to ensure order is maintained
+            return updated.sort((a, b) => {
+                // Keep consistent with main sort logic (assuming date_desc for new items usually)
+                // Or just prepend if we assume it's "Newest"? 
+                // Better to prepend and let the user re-sort if they change filter.
+                // But for "Newest First" (default), prepending is usually correct.
+                // However, if the user added a backdated expense, it should be placed correctly.
+
+                // For simplicity/UX, usually prepending is fine for "Just Added", 
+                // but strictly we should re-sort if we want "Newest First" to be true by date.
+                // Let's just prepend for now as it gives better immediate feedback "I just added this".
+                return updated;
+            });
+            return [newExpense, ...prev];
+        });
+    };
+
+    const handleDeleteExpense = (id) => {
+        setExpenseToDelete(id);
+        setIsDeleteModalOpen(true);
+    };
+
+    const confirmDelete = async () => {
+        if (!expenseToDelete) return;
+
+        try {
+            await deleteExpense(expenseToDelete);
+            setExpenses(prev => prev.filter(exp => exp._id !== expenseToDelete));
+        } catch (err) {
+            console.error('Failed to delete expense:', err);
+            // You might want to show a toast here in a real app
+            alert('Failed to delete expense');
+        } finally {
+            setIsDeleteModalOpen(false);
+            setExpenseToDelete(null);
+        }
     };
 
     return (
@@ -94,10 +188,21 @@ function Dashboard() {
                             setSortOrder={setSortOrder}
                             dateFilter={dateFilter}
                             setDateFilter={setDateFilter}
+                            onDelete={handleDeleteExpense}
                         />
                     </div>
                 </div>
             </div>
+            {/* Delete Confirmation Modal */}
+            <ConfirmModal
+                isOpen={isDeleteModalOpen}
+                onClose={() => setIsDeleteModalOpen(false)}
+                onConfirm={confirmDelete}
+                title="Delete Expense?"
+                message="Are you sure you want to delete this expense? This action cannot be undone."
+                confirmText="Delete Expense"
+                isDestructive={true}
+            />
         </div>
     );
 };

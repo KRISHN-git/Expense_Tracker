@@ -36,18 +36,19 @@ const AuthLayout = ({ children, type = 'login' }) => {
             {/* Right Panel - Auth Form */}
             <div className="w-full lg:w-1/2 flex flex-col relative h-full">
                 {/* Header */}
-                <div className="p-6 flex justify-between items-center absolute top-0 w-full z-20">
-                    <Link to="/" className="flex items-center gap-2 text-xl font-bold text-slate-800 hover:text-blue-600 transition-colors">
+                <div className="p-4 sm:p-6 flex justify-between items-center absolute top-0 w-full z-20">
+                    <Link to="/" className="flex items-center gap-2 text-lg sm:text-xl font-bold text-slate-800 hover:text-blue-600 transition-colors">
                         <div className="bg-blue-600 text-white p-1.5 rounded-lg shadow-sm">
                             {/* Use PieChart icon here to match landing page if imported, otherwise trending up is fine but let's stick to consistency */}
                             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-pie-chart"><path d="M21.21 15.89A10 10 0 1 1 8 2.83" /><path d="M22 12A10 10 0 0 0 12 2v10z" /></svg>
                         </div>
-                        ExpenseTracker
+                        <span className="hidden min-[475px]:inline">ExpenseTracker</span>
                     </Link>
 
                     {/* Back to Home Button (Requested) */}
-                    <Link to="/" className="text-sm font-medium text-slate-500 hover:text-slate-800 transition-colors flex items-center gap-1">
-                        Back to Home
+                    <Link to="/" className="text-xs sm:text-sm font-medium text-slate-500 hover:text-slate-800 transition-colors flex items-center gap-1 bg-white/50 px-2 py-1 rounded-full backdrop-blur-sm sm:bg-transparent sm:p-0">
+                        <span className="hidden min-[475px]:inline">Back to Home</span>
+                        <span className="min-[475px]:hidden">Home</span>
                     </Link>
                 </div>
 

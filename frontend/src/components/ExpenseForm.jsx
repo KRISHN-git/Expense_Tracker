@@ -10,7 +10,11 @@ const ExpenseForm = ({ onExpenseAdded, defaultPlanId = null }) => {
     const [amount, setAmount] = useState('');
     const [category, setCategory] = useState('');
     const [description, setDescription] = useState('');
-    const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
+    // Use local date to prevent timezone shifts
+    const today = new Date();
+    // specific to 'en-CA' (YYYY-MM-DD) which serves as ISO format but local time
+    const localDate = today.toLocaleDateString('en-CA');
+    const [date, setDate] = useState(localDate);
     const [planId, setPlanId] = useState(defaultPlanId || '');
     const [plans, setPlans] = useState([]);
     const [idempotencyKey, setIdempotencyKey] = useState('');
@@ -104,7 +108,9 @@ const ExpenseForm = ({ onExpenseAdded, defaultPlanId = null }) => {
             setAmount('');
             setCategory('');
             setDescription('');
-            setDate(new Date().toISOString().split('T')[0]);
+            const today = new Date();
+            const localDate = today.toLocaleDateString('en-CA');
+            setDate(localDate);
 
             if (!defaultPlanId) setPlanId('');
             setSplitOption('everyone');
@@ -149,7 +155,7 @@ const ExpenseForm = ({ onExpenseAdded, defaultPlanId = null }) => {
                     </div>
                 )}
                 {success && (
-                    <div className="bg-blue-50 text-blue-700 p-4 rounded-xl mb-6 text-sm font-medium border border-blue-100 animate-fade-in">
+                    <div className="bg-green-50 text-green-700 p-4 rounded-xl mb-6 text-sm font-medium border border-green-100 animate-fade-in">
                         Expense added successfully!
                     </div>
                 )}
