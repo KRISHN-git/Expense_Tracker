@@ -341,7 +341,7 @@ const PlanDetail = () => {
 
                         {/* Scrollable Content Area */}
                         <div className="flex-1 overflow-y-auto custom-scrollbar">
-                            <div className="p-6 md:p-8 max-w-5xl mx-auto w-full">
+                            <div className="p-4 sm:p-6 md:p-8 max-w-5xl mx-auto w-full">
 
                                 {/* Plan Header (Moved Here) */}
                                 <div className="flex flex-col md:flex-row md:items-start justify-between gap-6 mb-8">

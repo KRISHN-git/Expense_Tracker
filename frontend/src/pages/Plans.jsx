@@ -136,21 +136,21 @@ const Plans = () => {
     }
 
     return (
-        <div className="min-h-screen bg-slate-50 p-6 font-sans text-slate-800">
+        <div className="min-h-screen bg-slate-50 p-4 sm:p-6 font-sans text-slate-800">
             <div className="max-w-7xl mx-auto">
-                <header className="flex justify-between items-center mb-8">
-                    <div className="flex items-center gap-4">
-                        <Link to="/" className="p-2 rounded-full bg-white text-slate-500 hover:text-blue-600 hover:bg-blue-50 transition-colors shadow-sm">
+                <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
+                    <div className="flex items-center gap-4 w-full sm:w-auto">
+                        <Link to="/" className="p-2 rounded-full bg-white text-slate-500 hover:text-blue-600 hover:bg-blue-50 transition-colors shadow-sm shrink-0">
                             <ArrowLeft className="w-5 h-5" />
                         </Link>
                         <div>
-                            <h1 className="text-3xl font-bold text-slate-800 tracking-tight">My Plans</h1>
-                            <p className="text-slate-500 mt-1">Manage your budgets for specific events</p>
+                            <h1 className="text-2xl sm:text-3xl font-bold text-slate-800 tracking-tight">My Plans</h1>
+                            <p className="text-slate-500 mt-1 text-sm sm:text-base">Manage your budgets for specific events</p>
                         </div>
                     </div>
                     <button
                         onClick={() => setShowCreateModal(true)}
-                        className="flex items-center gap-2 bg-blue-600 text-white px-5 py-2.5 rounded-xl hover:bg-blue-700 transition shadow-lg shadow-blue-600/10"
+                        className="w-full sm:w-auto flex items-center justify-center gap-2 bg-blue-600 text-white px-5 py-3 sm:py-2.5 rounded-xl hover:bg-blue-700 transition shadow-lg shadow-blue-600/10 text-sm font-bold"
                     >
                         <Plus className="w-5 h-5" />
                         Create New Plan

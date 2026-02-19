@@ -147,7 +147,7 @@ const Analytics = ({ expenses }) => {
                                 <CartesianGrid
                                     strokeDasharray="3 3"
                                     vertical={false}
-                                    stroke="#f1f5f9"
+                                    stroke="#e2e8f0"
                                 />
                                 <XAxis
                                     dataKey="date"
@@ -193,7 +193,7 @@ const Analytics = ({ expenses }) => {
                 {/* Category Bar Chart */}
                 <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm min-h-[350px]">
                     <div className="flex justify-between items-center mb-6">
-                        <h3 className="text-slate-700 font-bold">Category Breakdown</h3>
+                        <h3 className="text-slate-700 font-bold">Spending by Category</h3>
                     </div>
                     <div className="h-[280px] w-full">
                         <ResponsiveContainer width="100%" height="100%">
@@ -206,7 +206,7 @@ const Analytics = ({ expenses }) => {
                                 <CartesianGrid
                                     strokeDasharray="3 3"
                                     horizontal={false}
-                                    stroke="#f1f5f9"
+                                    stroke="#e2e8f0"
                                 />
                                 <XAxis type="number" hide />
                                 <YAxis
