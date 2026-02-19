@@ -15,6 +15,8 @@ import {
     Plane
 } from 'lucide-react';
 
+export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
+
 export const CATEGORIES = [
     { id: 'Food', label: 'Food & Dining', icon: Utensils, color: 'text-orange-500', bg: 'bg-orange-100' },
     { id: 'Groceries', label: 'Groceries', icon: ShoppingBag, color: 'text-green-500', bg: 'bg-green-100' },
@@ -24,11 +26,11 @@ export const CATEGORIES = [
     { id: 'Entertainment', label: 'Entertainment', icon: Clapperboard, color: 'text-purple-500', bg: 'bg-purple-100' },
     { id: 'Healthcare', label: 'Healthcare', icon: HeartPulse, color: 'text-red-500', bg: 'bg-red-100' },
     { id: 'Shopping', label: 'Shopping', icon: Shirt, color: 'text-pink-500', bg: 'bg-pink-100' },
-    { id: 'Education', label: 'Education', icon: GraduationCap, color: 'text-teal-500', bg: 'bg-teal-100' },
-    { id: 'Travel', label: 'Travel', icon: Plane, color: 'text-sky-500', bg: 'bg-sky-100' },
-    { id: 'Salary', label: 'Salary/Income', icon: Briefcase, color: 'text-emerald-600', bg: 'bg-emerald-100' },
-    { id: 'Investment', label: 'Investment', icon: TrendingUp, color: 'text-cyan-600', bg: 'bg-cyan-100' },
-    { id: 'Other', label: 'Other', icon: MoreHorizontal, color: 'text-gray-500', bg: 'bg-gray-100' },
+    { id: 'Education', label: 'Education', icon: GraduationCap, color: 'text-sky-500', bg: 'bg-sky-100' },
+    { id: 'Travel', label: 'Travel', icon: Plane, color: 'text-blue-500', bg: 'bg-blue-100' },
+    { id: 'Salary', label: 'Salary/Income', icon: Briefcase, color: 'text-green-600', bg: 'bg-green-100' },
+    { id: 'Investment', label: 'Investment', icon: TrendingUp, color: 'text-indigo-600', bg: 'bg-indigo-100' },
+    { id: 'Other', label: 'Other', icon: MoreHorizontal, color: 'text-slate-500', bg: 'bg-slate-100' },
 ];
 
 export const getCategoryConfig = (id) => {

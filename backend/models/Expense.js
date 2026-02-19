@@ -25,18 +25,33 @@ const ExpenseSchema = new mongoose.Schema({
         required: [true, 'Date is required'],
         index: true
     },
+    user: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
+        required: true,
+        index: true
+    },
+    plan: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Plan',
+        default: null
+    },
+    splitBetween: [{
+        type: String // Stores names of members involved in the expense
+    }],
     idempotencyKey: {
         type: String,
-        unique: true,
-        sparse: true, // Allow multiple nulls if ever needed, but likely we want unique or required? 
-        // If required, we must send it. Better to be unique and required for this exercise.
-        index: true
+        // unique: true, // Old global uniqueness
+        // index: true
     },
     createdAt: {
         type: Date,
         default: Date.now
     }
 });
+
+// Compound index for User-scoped Idempotency
+ExpenseSchema.index({ user: 1, idempotencyKey: 1 }, { unique: true, sparse: true });
 
 // Compound index if we wanted to enforce uniqueness per user per day, but idempotencyKey handles the strict case.
 

@@ -1,10 +1,26 @@
-
 import axios from 'axios';
+import { API_BASE_URL } from '../utils/constants';
 
-const API_URL = 'https://expense-tracker-pi-swart-90.vercel.app/expenses';
+// Append /expenses strictly for the expenses service, OR just use base?
+// The original code was: const API_URL = 'http://localhost:5000/expenses';
+// But other files use /auth, /plans, etc. 
+// This specific file `api.js` seems to be just for expenses based on `getExpenses`.
+// So I will keep it pointing to /expenses base for THIS instance, but derived from constant.
+const API_URL = `${API_BASE_URL}/expenses`;
 
 const api = axios.create({
     baseURL: API_URL,
+});
+
+// Request interceptor to add token
+api.interceptors.request.use((config) => {
+    const token = localStorage.getItem('token');
+    if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+}, (error) => {
+    return Promise.reject(error);
 });
 
 export const getExpenses = async (params) => {
