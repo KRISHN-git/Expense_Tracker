@@ -1,4 +1,3 @@
-
 import React, { useMemo } from 'react';
 import { format } from 'date-fns';
 import { CATEGORIES, getCategoryConfig } from '../utils/constants';
@@ -14,18 +13,22 @@ const ExpenseList = ({
     setSortOrder,
     dateFilter,
     setDateFilter,
-    onDelete, // Optional callback
-    hideTotal = false // New prop
+    onDelete,
+    hideTotal = false
 }) => {
 
-    const totalAmount = expenses.reduce((sum, expense) => sum + expense.amount, 0);
+    const totalAmount = expenses
+        .filter(exp => !(exp.type === 'income' || ['Salary', 'Income', 'Investment'].includes(exp.category)))
+        .reduce((sum, expense) => sum + expense.amount, 0);
 
     const categorySummary = useMemo(() => {
         const summary = {};
-        expenses.forEach(exp => {
-            if (!summary[exp.category]) summary[exp.category] = 0;
-            summary[exp.category] += exp.amount;
-        });
+        expenses
+            .filter(exp => !(exp.type === 'income' || ['Salary', 'Income', 'Investment'].includes(exp.category)))
+            .forEach(exp => {
+                if (!summary[exp.category]) summary[exp.category] = 0;
+                summary[exp.category] += exp.amount;
+            });
         return summary;
     }, [expenses]);
 
@@ -33,36 +36,37 @@ const ExpenseList = ({
         <div className="flex flex-col h-full gap-6 font-sans">
             {/* Summary Grid */}
             {!loading && !error && expenses.length > 0 && (
-                <div className={`grid grid-cols-1 ${hideTotal ? '' : 'md:grid-cols-3'} gap-4 shrink-0`}>
+                <div className={`grid grid-cols-1 ${hideTotal ? '' : 'md:grid-cols-3'} gap-6 shrink-0`}>
                     {/* Total Card */}
                     {!hideTotal && (
-                        <div className="bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl p-5 text-white shadow-lg shadow-blue-500/20 flex flex-col justify-between relative overflow-hidden group">
-                            <div className="absolute top-0 right-0 w-24 h-24 bg-white/10 rounded-full -mr-10 -mt-10 blur-xl group-hover:bg-white/20 transition-all"></div>
-                            <div>
-                                <p className="text-blue-100 text-xs font-bold uppercase tracking-wider mb-1">Total Spending</p>
-                                <h3 className="text-3xl font-black">₹{(totalAmount / 100).toFixed(2)}</h3>
-                            </div>
-                            <div className="mt-1 flex items-center gap-2 text-blue-50 text-sm font-medium">
-                                <span className="bg-white/20 px-2 py-1 rounded-md text-xs font-bold text-white">{expenses.length}</span>
-                                <span>Transactions</span>
+                        <div className="bg-[#4d73b8] rounded-2xl p-6 text-white shadow-sm flex flex-col justify-between relative overflow-hidden group">
+                            <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-2xl -mr-10 -mt-10 pointer-events-none"></div>
+                            <div className="relative z-10">
+                                <p className="text-blue-50/90 text-sm font-medium mb-1">Total Found</p>
+                                <h3 className="text-3xl font-bold mb-4">₹{(totalAmount / 100).toLocaleString()}</h3>
+                                <div className="flex items-center gap-1 text-xs text-white/90 bg-white/20 w-fit px-2 py-1 rounded-md">
+                                    {expenses.length} Transactions
+                                </div>
                             </div>
                         </div>
                     )}
 
                     {/* Category Breakdown */}
-                    <div className={`${hideTotal ? 'w-full' : 'md:col-span-2'} bg-white rounded-2xl border border-slate-200 p-5 shadow-sm flex flex-col gap-3`}>
-                        <p className="text-slate-500 text-xs font-bold uppercase tracking-wider">Category Breakdown</p>
-                        <div className="flex gap-3 overflow-x-auto custom-scrollbar pb-2 items-center h-full">
-                            {Object.entries(categorySummary).map(([cat, amount]) => {
+                    <div className={`${hideTotal ? 'w-full' : 'md:col-span-2'} bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 p-6 shadow-sm flex flex-col gap-4 transition-colors duration-300`}>
+                        <p className="font-bold text-slate-800 dark:text-white">Category Breakdown</p>
+                        <div className="flex gap-4 overflow-x-auto custom-scrollbar pb-2 items-center h-full">
+                            {Object.entries(categorySummary).sort((a, b) => b[1] - a[1]).map(([cat, amount]) => {
                                 const config = getCategoryConfig(cat);
                                 const Icon = config?.icon || Wallet;
                                 return (
-                                    <div key={cat} className="flex flex-col items-center justify-center gap-1 min-w-[100px] p-3 rounded-xl border border-slate-100 bg-slate-50 hover:bg-slate-100 transition-colors cursor-default group">
-                                        <div className={`p-2 rounded-full ${config?.bg || 'bg-slate-200'} ${config?.color || 'text-slate-600'} group-hover:scale-110 transition-transform`}>
+                                    <div key={cat} className="flex flex-col items-center justify-center gap-2 min-w-[110px] p-4 rounded-xl border border-slate-100 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50 hover:bg-slate-100 dark:hover:bg-slate-700/80 transition-colors cursor-default group">
+                                        <div className={`p-2.5 rounded-full ${config?.bg || 'bg-slate-200 dark:bg-slate-800'} ${config?.color || 'text-slate-600 dark:text-slate-400'}`}>
                                             <Icon className="w-5 h-5" />
                                         </div>
-                                        <span className="text-xs font-bold text-slate-700 mt-1">{cat}</span>
-                                        <span className="text-sm font-black text-slate-900">₹{(amount / 100).toFixed(0)}</span>
+                                        <div className="text-center">
+                                            <span className="block text-xs font-semibold text-slate-500 dark:text-slate-400">{cat}</span>
+                                            <span className="block text-sm font-bold text-slate-800 dark:text-white">₹{(amount / 100).toLocaleString()}</span>
+                                        </div>
                                     </div>
                                 );
                             })}
@@ -71,14 +75,14 @@ const ExpenseList = ({
                 </div>
             )}
 
-            <div className="bg-white rounded-2xl shadow-md border border-slate-200 flex flex-col flex-1 overflow-hidden">
+            <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700 flex flex-col flex-1 overflow-hidden transition-colors duration-300">
                 {/* Controls */}
-                <div className="p-4 border-b border-slate-200 flex flex-wrap gap-4 bg-slate-50/80 shrink-0 items-center">
+                <div className="p-5 border-b border-slate-100 dark:border-slate-700 flex flex-wrap gap-4 bg-slate-50/50 dark:bg-slate-900/20 shrink-0 items-center">
                     <div className="flex-1 min-w-[150px]">
                         <select
                             value={categoryFilter}
                             onChange={(e) => setCategoryFilter(e.target.value)}
-                            className="w-full text-sm font-semibold rounded-lg border-slate-300 py-2.5 pl-3 pr-8 focus:border-blue-600 focus:ring-blue-600 shadow-sm bg-white"
+                            className="w-full text-sm font-medium rounded-lg border-slate-200 dark:border-slate-600 py-2.5 pl-3 pr-8 focus:border-[#4d73b8] focus:ring-[#4d73b8] shadow-sm bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200"
                         >
                             <option value="">All Categories</option>
                             {CATEGORIES.map(cat => (
@@ -91,7 +95,7 @@ const ExpenseList = ({
                         <select
                             value={dateFilter}
                             onChange={(e) => setDateFilter(e.target.value)}
-                            className="w-full text-sm font-semibold rounded-lg border-slate-300 py-2.5 pl-3 pr-8 focus:border-blue-600 focus:ring-blue-600 shadow-sm bg-white"
+                            className="w-full text-sm font-medium rounded-lg border-slate-200 dark:border-slate-600 py-2.5 pl-3 pr-8 focus:border-[#4d73b8] focus:ring-[#4d73b8] shadow-sm bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200"
                         >
                             <option value="">All Time</option>
                             <option value="today">Today</option>
@@ -104,7 +108,7 @@ const ExpenseList = ({
                         <select
                             value={sortOrder}
                             onChange={(e) => setSortOrder(e.target.value)}
-                            className="w-full text-sm font-semibold rounded-lg border-slate-300 py-2.5 pl-3 pr-8 focus:border-blue-600 focus:ring-blue-600 shadow-sm bg-white"
+                            className="w-full text-sm font-medium rounded-lg border-slate-200 dark:border-slate-600 py-2.5 pl-3 pr-8 focus:border-[#4d73b8] focus:ring-[#4d73b8] shadow-sm bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200"
                         >
                             <option value="date_desc">Newest First</option>
                             <option value="date_asc">Oldest First</option>
@@ -113,62 +117,72 @@ const ExpenseList = ({
                 </div>
 
                 {/* List Content */}
-                <div className="flex-1 overflow-y-auto custom-scrollbar">
+                <div className="flex-1 overflow-x-auto overflow-y-auto custom-scrollbar">
                     {loading ? (
-                        <div className="h-full flex flex-col items-center justify-center text-slate-400 gap-3">
-                            <div className="animate-spin rounded-full h-8 w-8 border-b-4 border-blue-600"></div>
-                            <p className="text-base font-medium">Loading transactions...</p>
+                        <div className="h-[300px] flex flex-col items-center justify-center text-slate-400 gap-3">
+                            <div className="animate-spin rounded-full h-8 w-8 border-b-4 border-[#4d73b8]"></div>
+                            <p className="text-sm font-medium">Loading transactions...</p>
                         </div>
                     ) : error ? (
-                        <div className="p-8 text-center text-red-600 text-base font-medium">
+                        <div className="p-8 text-center text-red-500 dark:text-red-400 text-sm font-medium">
                             {error}
                         </div>
                     ) : expenses.length === 0 ? (
-                        <div className="h-full flex flex-col items-center justify-center text-slate-400 gap-4">
-                            <Wallet className="w-12 h-12 text-slate-300" />
-                            <p className="text-base font-medium">No transactions found.</p>
+                        <div className="h-[300px] flex flex-col items-center justify-center text-slate-400 gap-4">
+                            <Wallet className="w-10 h-10 text-slate-300 dark:text-slate-600" />
+                            <p className="text-sm font-medium">No transactions found.</p>
                         </div>
                     ) : (
-                        <table className="min-w-full divide-y divide-slate-200">
-                            <thead className="bg-slate-50 sticky top-0 z-10 shadow-sm">
+                        <table className="w-full text-sm text-left relative">
+                            <thead className="text-xs text-slate-400 uppercase bg-transparent border-b border-slate-100 dark:border-slate-800 tracking-wider sticky top-0 bg-white dark:bg-slate-800 z-10">
                                 <tr>
-                                    <th className="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider w-32">Date</th>
-                                    <th className="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider w-40">Category</th>
-                                    <th className="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Description</th>
-                                    <th className="px-6 py-4 text-right text-xs font-bold text-slate-500 uppercase tracking-wider">Amount</th>
+                                    <th className="px-6 py-4 font-semibold uppercase tracking-wider">Date</th>
+                                    <th className="px-6 py-4 font-semibold uppercase tracking-wider">Category</th>
+                                    <th className="px-6 py-4 font-semibold uppercase tracking-wider">Description</th>
+                                    <th className="px-6 py-4 font-semibold text-right uppercase tracking-wider">Amount</th>
                                 </tr>
                             </thead>
-                            <tbody className="divide-y divide-slate-100 bg-white">
+                            <tbody>
                                 {expenses.map((expense) => {
-                                    const catConfig = getCategoryConfig(expense.category);
+                                    const { icon: Icon, color: colorClass, bg: bgClass } = getCategoryConfig(expense.category);
+                                    const isIncome = expense.type === 'income' || ['Salary', 'Income', 'Investment'].includes(expense.category);
 
                                     return (
-                                        <tr key={expense._id || expense.idempotencyKey} className="hover:bg-blue-50/50 transition-colors group">
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-700 font-semibold h-16">
-                                                {expense.date ? format(new Date(expense.date), 'MMM d, yyyy') : '-'}
+                                        <tr key={expense._id || expense.idempotencyKey} className="border-b border-slate-50 dark:border-slate-800/50 hover:bg-slate-50 dark:hover:bg-slate-800/80 transition-colors group cursor-pointer relative">
+                                            <td className="px-6 py-4 text-slate-600 dark:text-slate-400 whitespace-nowrap hidden md:table-cell">
+                                                {expense.date ? format(new Date(expense.date), 'MMM dd, yyyy') : '-'}
+                                                <div className="md:hidden text-xs text-slate-400 mt-1">{expense.date ? format(new Date(expense.date), 'MMM dd, yyyy') : '-'}</div>
                                             </td>
-                                            <td className="px-6 py-4 whitespace-nowrap">
-                                                <span className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-md text-xs font-bold border ${catConfig?.bg || 'bg-slate-100'} ${catConfig?.color || 'text-slate-700'} border-black/5`}>
-                                                    {catConfig?.icon && <catConfig.icon className="w-3.5 h-3.5" />}
+                                            <td className="px-6 py-4 table-cell md:hidden">
+                                                <div className="flex flex-col">
+                                                    <p className="text-slate-700 dark:text-slate-200 font-semibold mb-1 truncate max-w-[150px]">{expense.description || 'Unknown'}</p>
+                                                    <div className="text-xs text-slate-400">{expense.date ? format(new Date(expense.date), 'MMM dd') : '-'}</div>
+                                                </div>
+                                            </td>
+                                            <td className="px-6 py-4 hidden md:table-cell">
+                                                <div className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold ${bgClass} ${colorClass}`}>
+                                                    <Icon className="w-3.5 h-3.5" />
                                                     {expense.category}
-                                                </span>
+                                                </div>
                                             </td>
-                                            <td className="px-6 py-4 text-base text-slate-800 font-medium max-w-[250px] truncate group-hover:whitespace-normal group-hover:overflow-visible relative">
-                                                {expense.description}
+                                            <td className="px-6 py-4 text-slate-700 dark:text-slate-300 font-medium hidden md:table-cell">
+                                                <div className="truncate max-w-[250px]">{expense.description || 'Unknown'}</div>
                                             </td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-right">
-                                                <div className="flex items-center justify-end gap-3">
-                                                    <span className="text-lg font-bold text-slate-900">
-                                                        ₹{(expense.amount / 100).toFixed(2)}
-                                                    </span>
+                                            <td className={`px-6 py-4 text-right ${isIncome ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-800 dark:text-slate-200'}`}>
+                                                <div className="flex items-center justify-end gap-2">
+                                                    <div className="flex flex-col items-end font-bold">
+                                                        <span className="block md:hidden mb-1 text-xs">
+                                                            <div className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md font-normal ${bgClass} ${colorClass}`}>
+                                                                <Icon className="w-3 h-3" />
+                                                                {expense.category}
+                                                            </div>
+                                                        </span>
+                                                        <span>{isIncome ? '+' : ''}₹{(expense.amount / 100).toLocaleString()}</span>
+                                                    </div>
                                                     {onDelete && (
                                                         <button
-                                                            onClick={(e) => {
-                                                                e.stopPropagation();
-                                                                onDelete(expense._id);
-                                                            }}
-                                                            className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all opacity-100 lg:opacity-0 lg:group-hover:opacity-100 focus:opacity-100"
-                                                            title="Delete Expense"
+                                                            onClick={(e) => { e.stopPropagation(); onDelete(expense._id); }}
+                                                            className="p-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0"
                                                         >
                                                             <Trash2 className="w-4 h-4" />
                                                         </button>

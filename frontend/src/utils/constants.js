@@ -28,7 +28,7 @@ export const CATEGORIES = [
     { id: 'Shopping', label: 'Shopping', icon: Shirt, color: 'text-pink-500', bg: 'bg-pink-100' },
     { id: 'Education', label: 'Education', icon: GraduationCap, color: 'text-sky-500', bg: 'bg-sky-100' },
     { id: 'Travel', label: 'Travel', icon: Plane, color: 'text-blue-500', bg: 'bg-blue-100' },
-    { id: 'Salary', label: 'Salary/Income', icon: Briefcase, color: 'text-green-600', bg: 'bg-green-100' },
+    { id: 'Income', label: 'Income', icon: Briefcase, color: 'text-emerald-600', bg: 'bg-emerald-100' },
     { id: 'Investment', label: 'Investment', icon: TrendingUp, color: 'text-indigo-600', bg: 'bg-indigo-100' },
     { id: 'Other', label: 'Other', icon: MoreHorizontal, color: 'text-slate-500', bg: 'bg-slate-100' },
 ];

@@ -16,6 +16,11 @@ const ExpenseSchema = new mongoose.Schema({
         required: [true, 'Category is required'],
         index: true
     },
+    type: {
+        type: String,
+        enum: ['expense', 'income'],
+        default: 'expense'
+    },
     description: {
         type: String,
         required: [true, 'Description is required']
@@ -39,6 +44,9 @@ const ExpenseSchema = new mongoose.Schema({
     splitBetween: [{
         type: String // Stores names of members involved in the expense
     }],
+    paidBy: {
+        type: String // Name of the member who paid
+    },
     idempotencyKey: {
         type: String,
         // unique: true, // Old global uniqueness

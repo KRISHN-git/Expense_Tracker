@@ -2,6 +2,7 @@ import React from 'react';
 import { Link, useLocation, Outlet } from 'react-router-dom';
 import { TrendingUp } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { ThemeToggle } from '../components/ThemeToggle';
 
 const AuthLayout = () => {
     const location = useLocation();
@@ -10,9 +11,9 @@ const AuthLayout = () => {
     const isLogin = location.pathname === '/login' || location.pathname === '/';
 
     return (
-        <div className="min-h-screen lg:h-screen flex bg-white font-sans text-slate-800 lg:overflow-hidden relative">
+        <div className="min-h-screen lg:h-screen flex bg-white dark:bg-slate-950 font-sans text-slate-800 dark:text-slate-200 lg:overflow-hidden relative transition-colors duration-300">
             {/* Left Panel - Dark / Brand */}
-            <div className="hidden lg:flex lg:w-1/2 bg-[#0f172a] text-white flex-col justify-center items-center p-12 relative overflow-hidden">
+            <div className="hidden lg:flex lg:w-1/2 bg-[#0f172a] dark:bg-black text-white flex-col justify-center items-center p-12 relative overflow-hidden transition-colors duration-300">
                 {/* Background Decor - Animated Circles */}
                 <motion.div
                     animate={{
@@ -51,7 +52,7 @@ const AuthLayout = () => {
                         repeat: Infinity,
                         ease: "easeInOut"
                     }}
-                    className="absolute bottom-20 right-20 w-[300px] h-[300px] bg-blue-600/20 blur-[100px] rounded-full pointer-events-none"
+                    className="absolute bottom-20 right-20 w-[300px] h-[300px] bg-indigo-600/20 blur-[100px] rounded-full pointer-events-none"
                 />
 
                 {/* Center Content */}
@@ -89,10 +90,11 @@ const AuthLayout = () => {
             </div>
 
             {/* Right Panel - Auth Form */}
-            <div className="w-full lg:w-1/2 flex flex-col relative h-full bg-slate-50/50">
+            <div className="w-full lg:w-1/2 flex flex-col relative h-full bg-slate-50/50 dark:bg-slate-950 transition-colors duration-300">
                 {/* Header */}
                 <div className="p-4 sm:p-6 flex justify-between items-center absolute top-0 w-full z-20">
-                    <Link to="/" className="flex items-center gap-2 text-lg sm:text-xl font-bold text-slate-800 hover:text-blue-600 transition-colors">
+                    <ThemeToggle />
+                    <Link to="/" className="flex items-center gap-2 text-lg sm:text-xl font-bold text-slate-800 dark:text-white hover:text-blue-600 transition-colors">
                         <div className="bg-blue-600 text-white p-1.5 rounded-lg shadow-sm">
                             <TrendingUp className="w-5 h-5" />
                         </div>
@@ -100,42 +102,42 @@ const AuthLayout = () => {
                     </Link>
 
                     {/* Back to Home Button */}
-                    <Link to="/" className="text-xs sm:text-sm font-medium text-slate-500 hover:text-slate-800 transition-colors flex items-center gap-1 bg-white/80 px-3 py-1.5 rounded-full border border-slate-200 hover:bg-white backdrop-blur-sm">
+                    <Link to="/" className="text-xs sm:text-sm font-medium text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 transition-colors flex items-center gap-1 bg-white/80 dark:bg-slate-900/80 px-3 py-1.5 rounded-full border border-slate-200 dark:border-slate-800 hover:bg-white dark:hover:bg-slate-900 backdrop-blur-sm">
                         <span className="hidden min-[475px]:inline">Back to Home</span>
                         <span className="min-[475px]:hidden">Home</span>
                     </Link>
                 </div>
 
                 {/* Center Content - Form */}
-                <div className="flex-1 flex flex-col justify-center items-center p-6 sm:p-8 lg:p-12 w-full max-w-lg mx-auto overflow-y-auto max-h-screen no-scrollbar">
+                <div className="flex-1 flex flex-col justify-center items-center p-6 sm:p-8 lg:p-12 w-full max-w-lg mx-auto overflow-y-auto max-h-screen no-scrollbar relative z-10">
 
                     <motion.div
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.4, ease: "easeOut" }}
-                        className="w-full bg-white p-6 sm:p-8 rounded-3xl shadow-xl shadow-slate-200/50 border border-slate-100"
+                        className="w-full bg-white dark:bg-slate-900 p-6 sm:p-8 rounded-3xl shadow-xl shadow-slate-200/50 dark:shadow-black/50 border border-slate-100 dark:border-slate-800 transition-colors duration-300"
                     >
                         {/* Custom Toggle (No Animation) */}
-                        <div className="flex p-1 bg-slate-100 rounded-xl mb-6">
+                        <div className="flex p-1 bg-slate-100 dark:bg-slate-800 rounded-xl mb-6">
                             <Link
                                 to="/login"
-                                className={`flex-1 py-2.5 text-center text-sm font-bold rounded-lg transition-colors duration-200 ${isLogin ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+                                className={`flex-1 py-2.5 text-center text-sm font-bold rounded-lg transition-colors duration-200 ${isLogin ? 'bg-white dark:bg-slate-700 text-blue-600 dark:text-blue-400 shadow-sm' : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'}`}
                             >
                                 Sign In
                             </Link>
                             <Link
                                 to="/signup"
-                                className={`flex-1 py-2.5 text-center text-sm font-bold rounded-lg transition-colors duration-200 ${!isLogin ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+                                className={`flex-1 py-2.5 text-center text-sm font-bold rounded-lg transition-colors duration-200 ${!isLogin ? 'bg-white dark:bg-slate-700 text-blue-600 dark:text-blue-400 shadow-sm' : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'}`}
                             >
                                 Sign Up
                             </Link>
                         </div>
 
                         <div className="text-center mb-6">
-                            <h2 className="text-2xl font-bold text-slate-900 mb-1">
+                            <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-1 transition-colors">
                                 {isLogin ? 'Welcome Back' : 'Create Account'}
                             </h2>
-                            <p className="text-slate-500 text-sm">
+                            <p className="text-slate-500 dark:text-slate-400 text-sm transition-colors">
                                 {isLogin ? 'Enter your details below' : 'Start your financial journey'}
                             </p>
                         </div>

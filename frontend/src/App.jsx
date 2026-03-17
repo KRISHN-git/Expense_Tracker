@@ -11,6 +11,11 @@ import Plans from './pages/Plans';
 import PlanDetail from './pages/PlanDetail';
 import PageTransition from './components/PageTransition';
 import AuthLayout from './components/AuthLayout';
+import MainLayout from './components/MainLayout';
+import Expenses from './pages/Expenses';
+import AnalyticsPage from './pages/AnalyticsPage';
+import Settings from './pages/Settings';
+import { ThemeProvider } from './components/theme-provider';
 
 // Helper to redirect authenticated users away from public pages
 const PublicRoute = ({ children }) => {
@@ -54,10 +59,14 @@ const AnimatedRoutes = () => {
         </Route>
 
         <Route element={<ProtectedRoute />}>
-          {/* Removed PageTransition from Dashboard and other protected routes as requested */}
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/plans" element={<Plans />} />
-          <Route path="/plans/:id" element={<PlanDetail />} />
+          <Route element={<MainLayout />}>
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/expenses" element={<Expenses />} />
+            <Route path="/analytics" element={<AnalyticsPage />} />
+            <Route path="/plans" element={<Plans />} />
+            <Route path="/plans/:id" element={<PlanDetail />} />
+            <Route path="/settings" element={<Settings />} />
+          </Route>
         </Route>
 
         <Route path="*" element={<Navigate to="/" />} />
@@ -68,9 +77,11 @@ const AnimatedRoutes = () => {
 
 function App() {
   return (
-    <Router>
-      <AnimatedRoutes />
-    </Router>
+    <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
+      <Router>
+        <AnimatedRoutes />
+      </Router>
+    </ThemeProvider>
   )
 }
 

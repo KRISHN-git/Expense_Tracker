@@ -24,6 +24,13 @@ import { TrendingUp, Download } from "lucide-react";
 
 
 const Analytics = ({ expenses }) => {
+    const totalIncomeThisMonth = useMemo(() => {
+        const now = new Date();
+        return expenses
+            .filter((exp) => (exp.type === 'income' || ['Salary', 'Income', 'Investment'].includes(exp.category)) && new Date(exp.date).getMonth() === now.getMonth() && new Date(exp.date).getFullYear() === now.getFullYear())
+            .reduce((sum, exp) => sum + exp.amount, 0);
+    }, [expenses]);
+
     // 1. Spending Trend (Last 30 Days)
     const trendData = useMemo(() => {
         const end = new Date();
@@ -32,7 +39,7 @@ const Analytics = ({ expenses }) => {
 
         return days.map((day) => {
             const dailyTotal = expenses
-                .filter((exp) => isSameDay(new Date(exp.date), day))
+                .filter((exp) => !(exp.type === 'income' || ['Salary', 'Income', 'Investment'].includes(exp.category)) && isSameDay(new Date(exp.date), day))
                 .reduce((sum, exp) => sum + exp.amount, 0);
 
             return {
@@ -45,10 +52,12 @@ const Analytics = ({ expenses }) => {
     // 2. Category Breakdown
     const categoryData = useMemo(() => {
         const summary = {};
-        expenses.forEach((exp) => {
-            if (!summary[exp.category]) summary[exp.category] = 0;
-            summary[exp.category] += exp.amount;
-        });
+        expenses
+            .filter((exp) => !(exp.type === 'income' || ['Salary', 'Income', 'Investment'].includes(exp.category)))
+            .forEach((exp) => {
+                if (!summary[exp.category]) summary[exp.category] = 0;
+                summary[exp.category] += exp.amount;
+            });
 
         return Object.entries(summary)
             .map(([name, value]) => ({ name, value: value / 100 }))
@@ -56,13 +65,13 @@ const Analytics = ({ expenses }) => {
     }, [expenses]);
 
     const COLORS = [
-        "#2563eb",
-        "#16a34a",
-        "#d97706",
-        "#dc2626",
-        "#7c3aed",
-        "#db2777",
-        "#4f46e5",
+        "#10B981", // Emerald 500
+        "#14B8A6", // Teal 500
+        "#3B82F6", // Blue 500
+        "#8B5CF6", // Purple 500
+        "#F97316", // Orange 500
+        "#EF4444", // Red 500
+        "#64748B", // Slate 500
     ];
 
     // 3. Removed Budget Logic (Moved to BudgetTracker)
@@ -108,29 +117,40 @@ const Analytics = ({ expenses }) => {
     return (
         <div className="space-y-6 mt-8 animate-fade-in-up">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                <h2 className="text-xl font-bold text-slate-800 flex items-center gap-2">
-                    <TrendingUp className="w-6 h-6 text-blue-600" />
+                <h2 className="text-xl font-bold text-slate-800 dark:text-white flex items-center gap-2">
+                    <TrendingUp className="w-6 h-6 text-emerald-500" />
                     Analytics & Goals
                 </h2>
                 <button
                     onClick={handleExport}
-                    className="flex items-center gap-2 px-4 py-2 bg-slate-900 text-white rounded-lg text-sm font-bold hover:bg-slate-800 transition shadow-md"
+                    className="flex items-center gap-2 px-4 py-2 bg-slate-900 dark:bg-emerald-600 text-white rounded-lg text-sm font-bold hover:bg-slate-800 dark:hover:bg-emerald-700 transition shadow-md"
                 >
                     <Download className="w-4 h-4" />
                     Export Report
                 </button>
             </div>
 
+            {/* Income Stat Card */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <div className="bg-gradient-to-br from-emerald-500 to-emerald-700 text-white rounded-2xl p-5 shadow-md relative overflow-hidden flex flex-col justify-between border border-emerald-400/50">
+                    <div className="relative z-10">
+                        <h3 className="text-emerald-50/90 font-medium mb-1">Total Income (This Month)</h3>
+                        <p className="text-3xl font-bold">₹{(totalIncomeThisMonth / 100).toLocaleString()}</p>
+                    </div>
+                    <div className="absolute right-0 top-0 w-32 h-32 bg-white/10 rounded-full blur-2xl -mr-10 -mt-10 pointer-events-none"></div>
+                </div>
+            </div>
+
             {/* Charts Grid */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {/* Spending Trend */}
-                <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm min-h-[350px]">
+                <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 p-6 shadow-sm min-h-[350px] transition-colors duration-300">
                     <div className="flex justify-between items-center mb-6">
-                        <h3 className="text-slate-700 font-bold flex items-center gap-2">
-                            <TrendingUp className="w-5 h-5 text-blue-500" />
+                        <h3 className="text-slate-700 dark:text-slate-200 font-bold flex items-center gap-2">
+                            <TrendingUp className="w-5 h-5 text-emerald-500" />
                             Spending Trend
                         </h3>
-                        <span className="text-xs font-medium text-slate-400 bg-slate-100 px-2 py-1 rounded-full">
+                        <span className="text-xs font-medium text-slate-400 dark:text-slate-500 bg-slate-100 dark:bg-slate-900/50 px-2 py-1 rounded-full">
                             Last 30 Days
                         </span>
                     </div>
@@ -140,14 +160,14 @@ const Analytics = ({ expenses }) => {
                             <AreaChart data={trendData}>
                                 <defs>
                                     <linearGradient id="colorAmount" x1="0" y1="0" x2="0" y2="1">
-                                        <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3} />
-                                        <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
+                                        <stop offset="5%" stopColor="#10B981" stopOpacity={0.3} />
+                                        <stop offset="95%" stopColor="#10B981" stopOpacity={0} />
                                     </linearGradient>
                                 </defs>
                                 <CartesianGrid
                                     strokeDasharray="3 3"
                                     vertical={false}
-                                    stroke="#e2e8f0"
+                                    stroke="#334155" // slate-700 for better dark mode visibility
                                 />
                                 <XAxis
                                     dataKey="date"
@@ -169,10 +189,13 @@ const Analytics = ({ expenses }) => {
                                         border: "none",
                                         boxShadow: "0 10px 25px -5px rgb(0 0 0 / 0.1)",
                                         padding: "12px",
+                                        backgroundColor: "#1E293B", // slate-800
+                                        color: "#CBD5E1", // slate-300
                                     }}
+                                    itemStyle={{ color: "#10B981", fontWeight: "bold" }}
                                     formatter={(value) => [`₹${value}`, "Spent"]}
                                     cursor={{
-                                        stroke: "#3b82f6",
+                                        stroke: "#10B981",
                                         strokeWidth: 1,
                                         strokeDasharray: "5 5",
                                     }}
@@ -180,7 +203,7 @@ const Analytics = ({ expenses }) => {
                                 <Area
                                     type="monotone"
                                     dataKey="amount"
-                                    stroke="#3b82f6"
+                                    stroke="#10B981"
                                     strokeWidth={3}
                                     fillOpacity={1}
                                     fill="url(#colorAmount)"
@@ -191,9 +214,9 @@ const Analytics = ({ expenses }) => {
                 </div>
 
                 {/* Category Bar Chart */}
-                <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm min-h-[350px]">
+                <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 p-6 shadow-sm min-h-[350px] transition-colors duration-300">
                     <div className="flex justify-between items-center mb-6">
-                        <h3 className="text-slate-700 font-bold">Spending by Category</h3>
+                        <h3 className="text-slate-700 dark:text-slate-200 font-bold">Spending by Category</h3>
                     </div>
                     <div className="h-[280px] w-full">
                         <ResponsiveContainer width="100%" height="100%">
@@ -206,25 +229,28 @@ const Analytics = ({ expenses }) => {
                                 <CartesianGrid
                                     strokeDasharray="3 3"
                                     horizontal={false}
-                                    stroke="#e2e8f0"
+                                    stroke="#334155" // slate-700
                                 />
                                 <XAxis type="number" hide />
                                 <YAxis
                                     dataKey="name"
                                     type="category"
-                                    tick={{ fontSize: 12, fill: "#475569", fontWeight: 600 }}
+                                    tick={{ fontSize: 12, fill: "#94a3b8", fontWeight: 600 }}
                                     width={90}
                                     tickLine={false}
                                     axisLine={false}
                                 />
                                 <Tooltip
-                                    cursor={{ fill: "#f8fafc", radius: 8 }}
+                                    cursor={{ fill: "transparent" }}
                                     contentStyle={{
                                         borderRadius: "16px",
                                         border: "none",
                                         boxShadow: "0 10px 25px -5px rgb(0 0 0 / 0.1)",
                                         padding: "12px",
+                                        backgroundColor: "#1E293B", // slate-800
+                                        color: "#CBD5E1", // slate-300
                                     }}
+                                    itemStyle={{ color: "#10B981", fontWeight: "bold" }}
                                     formatter={(value) => [`₹${value.toFixed(2)}`, "Spent"]}
                                 />
                                 <Bar
@@ -257,7 +283,7 @@ const Analytics = ({ expenses }) => {
             </div>
 
 
-        </div>
+        </div >
     );
 };
 

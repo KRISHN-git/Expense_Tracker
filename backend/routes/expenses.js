@@ -25,7 +25,9 @@ router.get('/budget-analytics', protect, async (req, res) => {
             {
                 $match: {
                     user: new mongoose.Types.ObjectId(userId),
-                    date: { $gte: sixMonthsAgo }
+                    date: { $gte: sixMonthsAgo },
+                    type: { $ne: 'income' },
+                    category: { $nin: ['Salary', 'Income', 'Investment'] }
                 }
             },
             {
@@ -100,7 +102,7 @@ router.get('/budget-analytics', protect, async (req, res) => {
 // @route   POST /expenses
 // @access  Private
 router.post('/', protect, async (req, res) => {
-    const { amount, category, description, date, planId } = req.body;
+    const { amount, category, description, date, planId, type, paidBy } = req.body;
     const idempotencyKey = req.header('Idempotency-Key');
 
     // Validation
@@ -129,9 +131,11 @@ router.post('/', protect, async (req, res) => {
             user: req.user.id,
             amount,
             category,
+            type: type || 'expense',
             description,
             date,
             splitBetween: req.body.splitBetween || [],
+            paidBy,
             idempotencyKey
         };
 
